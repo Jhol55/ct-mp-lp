@@ -16,6 +16,7 @@ export function ReelsVideoDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [generatedThumbSrc, setGeneratedThumbSrc] = useState(null);
+  const [thumbFailed, setThumbFailed] = useState(false);
   const dialogTitleId = useId();
   const modalVideoRef = useRef(null);
 
@@ -144,10 +145,14 @@ export function ReelsVideoDialog({
             // ignore sampling errors (CORS / security)
           }
 
-          const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
-          if (!cancelled) setGeneratedThumbSrc(dataUrl);
-
-          cleanup();
+          try {
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
+            if (!cancelled) setGeneratedThumbSrc(dataUrl);
+            cleanup();
+          } catch {
+            if (!cancelled) setThumbFailed(true);
+            cleanup();
+          }
         };
 
         const onLoadedData = () => {
@@ -161,6 +166,7 @@ export function ReelsVideoDialog({
         };
 
         const onError = () => {
+          if (!cancelled) setThumbFailed(true);
           cleanup();
         };
 
@@ -170,12 +176,19 @@ export function ReelsVideoDialog({
 
         video.load();
       } catch {
+        if (!cancelled) setThumbFailed(true);
         // ignore
       }
     }
 
     // If a custom thumbnail is provided, skip generation.
-    if (!thumbnailSrc && videoSrc) void generate();
+    if (!thumbnailSrc && videoSrc) {
+      setGeneratedThumbSrc(null);
+      setThumbFailed(false);
+      void generate();
+    } else {
+      setThumbFailed(false);
+    }
 
     return () => {
       cancelled = true;
@@ -213,15 +226,33 @@ export function ReelsVideoDialog({
         className="group relative w-full overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 hover:border-white/15 transition-colors"
       >
         <div className="relative h-[520px] sm:h-[560px]">
-          <Image
-            src={thumbnailSrc ?? generatedThumbSrc ?? "/images/reels-thumb.svg"}
-            alt={thumbnailAlt}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-            unoptimized
-            priority={false}
-          />
+          {(() => {
+            const finalThumbSrc =
+              thumbnailSrc ??
+              generatedThumbSrc ??
+              (thumbFailed ? "/images/reels-thumb.svg" : null);
+
+            if (!finalThumbSrc) {
+              return (
+                <div
+                  aria-hidden
+                  className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-zinc-900/60 to-zinc-950 animate-pulse"
+                />
+              );
+            }
+
+            return (
+              <Image
+                src={finalThumbSrc}
+                alt={thumbnailAlt}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                unoptimized
+                priority={false}
+              />
+            );
+          })()}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
           <div className="absolute inset-0 flex items-center justify-center">
