@@ -1,0 +1,47 @@
+<svg width="1080" height="1920" viewBox="0 0 1080 1920" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1080" y2="1920" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0B0B0C"/>
+      <stop offset="0.55" stop-color="#0A0A0A"/>
+      <stop offset="1" stop-color="#000000"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(320 520) rotate(55) scale(900 700)">
+      <stop stop-color="#DC2626" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#DC2626" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="300" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#DC2626"/>
+      <stop offset="1" stop-color="#DC2626" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1080" height="1920" fill="url(#bg)"/>
+  <rect width="1080" height="1920" fill="url(#glow)"/>
+
+  <g opacity="0.12">
+    <path d="M70 330H1010" stroke="#FFFFFF" stroke-width="2"/>
+    <path d="M70 620H1010" stroke="#FFFFFF" stroke-width="2"/>
+    <path d="M70 910H1010" stroke="#FFFFFF" stroke-width="2"/>
+    <path d="M70 1200H1010" stroke="#FFFFFF" stroke-width="2"/>
+    <path d="M70 1490H1010" stroke="#FFFFFF" stroke-width="2"/>
+  </g>
+
+  <g>
+    <text x="90" y="235" fill="#FFFFFF" font-size="64" font-family="Arial, Helvetica, sans-serif" font-weight="800" letter-spacing="10">MÃO DE PEDRA</text>
+    <rect x="90" y="280" width="340" height="10" fill="url(#line)"/>
+    <text x="90" y="390" fill="#FFFFFF" fill-opacity="0.75" font-size="42" font-family="Arial, Helvetica, sans-serif" font-weight="600">Reels (prévia)</text>
+    <text x="90" y="470" fill="#FFFFFF" fill-opacity="0.6" font-size="34" font-family="Arial, Helvetica, sans-serif" font-weight="500">Clique para abrir o vídeo</text>
+  </g>
+
+  <g>
+    <circle cx="540" cy="1030" r="150" fill="#DC2626" fill-opacity="0.18"/>
+    <circle cx="540" cy="1030" r="110" fill="#DC2626" fill-opacity="0.22"/>
+    <path d="M515 970L635 1030L515 1090V970Z" fill="#FFFFFF" fill-opacity="0.92"/>
+  </g>
+
+  <g>
+    <text x="90" y="1760" fill="#FFFFFF" fill-opacity="0.65" font-size="30" font-family="Arial, Helvetica, sans-serif">Formato: 9:16</text>
+    <text x="90" y="1820" fill="#FFFFFF" fill-opacity="0.45" font-size="28" font-family="Arial, Helvetica, sans-serif">Substitua este thumbnail quando quiser</text>
+  </g>
+</svg>
+
