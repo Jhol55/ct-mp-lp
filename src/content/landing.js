@@ -117,7 +117,8 @@ export const landingContent = {
       {
         title: "",
         kind: "video",
-        src: "/videos/video-03.mp4",
+        src: "/videos/video-03.mp4?v=2",
+        thumbnailTimeSec: 1.8,
       },
     ],
   },

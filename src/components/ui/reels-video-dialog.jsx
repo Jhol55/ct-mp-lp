@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 export function ReelsVideoDialog({
   videoSrc,
   thumbnailSrc,
+  thumbnailTimeSec,
   thumbnailAlt = "Abrir vídeo",
   label = "Assistir",
   className,
@@ -30,14 +31,80 @@ export function ReelsVideoDialog({
         video.preload = "auto";
         video.crossOrigin = "anonymous";
 
+        const MAX_ATTEMPTS = 3;
+        const DARK_LUMA_THRESHOLD = 22; // 0..255 (lower = darker)
+        let attempt = 0;
+        let candidates = [];
+
         const cleanup = () => {
           try {
             video.pause();
           } catch {
             // ignore
           }
+          video.removeEventListener("loadeddata", onLoadedData);
+          video.removeEventListener("seeked", onSeeked);
+          video.removeEventListener("error", onError);
           video.removeAttribute("src");
           video.load();
+        };
+
+        const clampSeekTime = (t) => {
+          const duration = Number.isFinite(video.duration) ? video.duration : 0;
+          if (!duration) return Math.max(0.2, t);
+          return Math.min(Math.max(0.2, t), Math.max(0.2, duration - 0.1));
+        };
+
+        const getCandidates = () => {
+          const duration = Number.isFinite(video.duration) ? video.duration : 0;
+          if (Number.isFinite(thumbnailTimeSec))
+            return [clampSeekTime(thumbnailTimeSec)];
+
+          if (duration) {
+            return [
+              clampSeekTime(Math.max(0.8, duration * 0.05)),
+              clampSeekTime(Math.max(1.6, duration * 0.1)),
+              clampSeekTime(Math.max(2.5, duration * 0.2)),
+            ];
+          }
+
+          return [0.8, 1.6, 2.5];
+        };
+
+        const seekToAttempt = (nextAttempt) => {
+          attempt = nextAttempt;
+          const t =
+            candidates[Math.min(attempt, candidates.length - 1)] ??
+            candidates[0] ??
+            0.8;
+          try {
+            video.currentTime = t;
+          } catch {
+            capture();
+          }
+        };
+
+        const isMostlyDark = (imageData) => {
+          const data = imageData.data;
+          if (!data || data.length < 4) return false;
+
+          let sum = 0;
+          let count = 0;
+          const stride = 4 * 120; // sample every N pixels (fast)
+
+          for (let i = 0; i < data.length; i += stride) {
+            const r = data[i] ?? 0;
+            const g = data[i + 1] ?? 0;
+            const b = data[i + 2] ?? 0;
+            // Perceived luminance
+            const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            sum += luma;
+            count += 1;
+            if (count >= 2500) break;
+          }
+
+          const avg = sum / Math.max(1, count);
+          return avg < DARK_LUMA_THRESHOLD;
         };
 
         const capture = () => {
@@ -61,44 +128,45 @@ export function ReelsVideoDialog({
           ctx.imageSmoothingQuality = "high";
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+          try {
+            const sampleW = Math.min(96, canvas.width);
+            const sampleH = Math.min(96, canvas.height);
+            const img = ctx.getImageData(0, 0, sampleW, sampleH);
+            const dark = isMostlyDark(img);
+            if (
+              dark &&
+              attempt + 1 < Math.min(MAX_ATTEMPTS, candidates.length || 1)
+            ) {
+              seekToAttempt(attempt + 1);
+              return;
+            }
+          } catch {
+            // ignore sampling errors (CORS / security)
+          }
+
           const dataUrl = canvas.toDataURL("image/jpeg", 0.88);
           if (!cancelled) setGeneratedThumbSrc(dataUrl);
 
           cleanup();
         };
 
-        video.addEventListener(
-          "loadeddata",
-          () => {
-            // Try to seek a tiny bit so we don't accidentally grab a black first frame.
-            const t = Math.min(
-              0.15,
-              Number.isFinite(video.duration) ? video.duration : 0.15,
-            );
-            try {
-              video.currentTime = t;
-            } catch {
-              capture();
-            }
-          },
-          { once: true },
-        );
+        const onLoadedData = () => {
+          candidates = getCandidates();
+          attempt = 0;
+          seekToAttempt(0);
+        };
 
-        video.addEventListener(
-          "seeked",
-          () => {
-            capture();
-          },
-          { once: true },
-        );
+        const onSeeked = () => {
+          capture();
+        };
 
-        video.addEventListener(
-          "error",
-          () => {
-            cleanup();
-          },
-          { once: true },
-        );
+        const onError = () => {
+          cleanup();
+        };
+
+        video.addEventListener("loadeddata", onLoadedData, { once: true });
+        video.addEventListener("seeked", onSeeked);
+        video.addEventListener("error", onError, { once: true });
 
         video.load();
       } catch {
@@ -112,7 +180,7 @@ export function ReelsVideoDialog({
     return () => {
       cancelled = true;
     };
-  }, [thumbnailSrc, videoSrc]);
+  }, [thumbnailSrc, thumbnailTimeSec, videoSrc]);
 
   useEffect(() => {
     const onKeyDown = (e) => {

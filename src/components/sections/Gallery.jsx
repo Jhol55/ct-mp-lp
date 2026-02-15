@@ -1,10 +1,10 @@
 import { ReelsVideoDialog } from "@/components/ui/reels-video-dialog";
 import { landingContent } from "@/content/landing";
 
-function VideoItem({ src, featured }) {
+function VideoItem({ src, featured, thumbnailTimeSec }) {
   return (
     <div className={[featured ? "lg:row-span-2" : ""].join(" ")}>
-      <ReelsVideoDialog videoSrc={src} />
+      <ReelsVideoDialog videoSrc={src} thumbnailTimeSec={thumbnailTimeSec} />
     </div>
   );
 }
@@ -38,6 +38,7 @@ export function Gallery() {
                 key={item.src}
                 src={item.src}
                 featured={item.featured}
+                thumbnailTimeSec={item.thumbnailTimeSec}
               />
             ))}
         </div>
