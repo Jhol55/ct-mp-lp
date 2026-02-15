@@ -5,13 +5,17 @@ import { Icon } from "./icons";
 function Card({ icon, title, description }) {
   return (
     <div className="group rounded-2xl bg-white/5 border border-white/10 p-6 sm:p-7 shadow-sm transition-transform duration-200 hover:-translate-y-0.5 hover:border-white/15 focus-within:border-white/15">
-      <div className="h-12 w-12 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center">
-        <Icon name={icon} className="h-6 w-6" />
+      <div className="grid grid-cols-[auto,1fr] items-start gap-x-4 sm:block">
+        <div className="h-12 w-12 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center mb-0 sm:mb-5">
+          <Icon name={icon} className="h-6 w-6" />
+        </div>
+        <h3 className="text-white text-xl font-bold leading-snug">
+          {title}
+        </h3>
+        <p className="mt-3 text-white/70 leading-relaxed col-start-2 sm:col-start-auto">
+          {description}
+        </p>
       </div>
-      <h3 className="mt-5 text-white text-xl font-bold leading-snug">
-        {title}
-      </h3>
-      <p className="mt-3 text-white/70 leading-relaxed">{description}</p>
     </div>
   );
 }

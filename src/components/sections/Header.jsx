@@ -88,7 +88,7 @@ export function Header() {
 
             <button
               type="button"
-              className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-full border border-white/15 text-white/90 hover:text-white hover:border-white/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70"
+              className="md:hidden inline-flex items-center justify-center h-10 w-10 rounded-full border border-white/15 text-white/90 hover:text-white hover:border-white/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/70 mr-1 sm:mr-0"
               aria-label="Abrir menu"
               aria-expanded={mobileOpen}
               onClick={() => setMobileOpen((v) => !v)}

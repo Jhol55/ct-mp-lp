@@ -12,8 +12,8 @@ export const landingContent = {
     items: [
       { label: "Início", href: "#inicio" },
       { label: "Sobre", href: "#sobre" },
+      { label: "CT em Ação", href: "#galeria" },
       { label: "Benefícios", href: "#beneficios" },
-      { label: "Galeria", href: "#galeria" },
     ],
     ctaLabel: "Agende Agora",
   },
