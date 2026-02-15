@@ -121,6 +121,38 @@ export const landingContent = {
       },
     ],
   },
+  locations: {
+    id: "unidades",
+    title: "Nossas Unidades em Piracicaba",
+    description:
+      "Escolha a unidade mais perto de você e veja a rota no Google Maps.",
+    items: [
+      {
+        name: "Unidade Perdizes",
+        mapsUrl: "https://maps.app.goo.gl/jS15YbTeBZAELyDX7",
+        address: {
+          streetAddress: "Av. Taubaté, 520",
+          addressLocality: "Piracicaba",
+          addressRegion: "SP",
+          postalCode: "13423-570",
+          neighborhood: "Perdizes",
+          addressCountry: "BR",
+        },
+      },
+      {
+        name: "Unidade Água Branca",
+        mapsUrl: "https://maps.app.goo.gl/5Fw2tXL3ohjYNMwt5",
+        address: {
+          streetAddress: "Av. Edne Rontani Bassete, 2066",
+          addressLocality: "Piracicaba",
+          addressRegion: "SP",
+          postalCode: "13426-160",
+          neighborhood: "Água Branca",
+          addressCountry: "BR",
+        },
+      },
+    ],
+  },
   finalCta: {
     title: "Pronto para treinar de verdade?",
     description:

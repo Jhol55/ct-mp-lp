@@ -4,6 +4,7 @@ import { Footer } from "@/components/sections/Footer";
 import { Gallery } from "@/components/sections/Gallery";
 import { Header } from "@/components/sections/Header";
 import { Hero } from "@/components/sections/Hero";
+import { Locations } from "@/components/sections/Locations";
 import { Welcome } from "@/components/sections/Welcome";
 
 export default function Home() {
@@ -15,6 +16,7 @@ export default function Home() {
         <Welcome />
         <Gallery />
         <Benefits />
+        <Locations />
         <FinalCta />
         <Footer />
       </main>
