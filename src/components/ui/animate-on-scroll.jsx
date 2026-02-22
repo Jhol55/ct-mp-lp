@@ -1,26 +1,8 @@
 "use client";
 
-import { type ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useInView } from "@/hooks/use-in-view";
 import { cn } from "@/lib/utils";
-
-interface AnimateOnScrollProps {
-  children: ReactNode;
-  className?: string;
-  delay?: number;
-  duration?: number;
-  threshold?: number;
-  rootMargin?: string;
-  triggerOnce?: boolean;
-  animation?:
-    | "fadeIn"
-    | "slideUp"
-    | "slideLeft"
-    | "slideRight"
-    | "scale"
-    | "fadeInUp"
-    | "fadeInDown";
-}
 
 export function AnimateOnScroll({
   children,
@@ -32,7 +14,7 @@ export function AnimateOnScroll({
   rootMargin = "0px 0px -20% 0px",
   triggerOnce = true,
   animation = "fadeInUp",
-}: AnimateOnScrollProps) {
+}) {
   const [canObserve, setCanObserve] = useState(false);
   const { ref, isInView } = useInView({
     threshold,
@@ -69,10 +51,10 @@ export function AnimateOnScroll({
 
   return (
     <div
-      ref={ref as React.RefObject<HTMLDivElement>}
+      ref={ref}
       className={cn(
         "transition-all ease-[cubic-bezier(.16,1,.3,1)]",
-        animationClasses[animation],
+        animationClasses[animation] ?? animationClasses.fadeInUp,
         className,
       )}
       style={{
@@ -84,3 +66,4 @@ export function AnimateOnScroll({
     </div>
   );
 }
+
