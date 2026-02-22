@@ -1,14 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module.js';
-import { PrismaService } from './prisma/prisma.service.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = app.get(ConfigService);
-  const prisma = app.get(PrismaService);
-  await prisma.enableShutdownHooks(app);
+  // Ensure proper shutdown on SIGINT/SIGTERM (Prisma v5+ no longer supports beforeExit on library engine)
+  app.enableShutdownHooks();
 
   const corsOrigin = (config.get('CORS_ORIGIN') ?? '').trim();
   const origins = corsOrigin
