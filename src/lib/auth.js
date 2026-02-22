@@ -45,23 +45,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             name: data.user?.name || data.user_name,
             token: data.token,
             role: data.user?.role || data.role,
-            leaderSlug: data.user?.tenant_slug || data.tenant_slug,
           };
           ///////////////////////////////////////////////////////
 
           
           if (isAdminSubdomain && user.role !== "ADMIN") {
-            return null;
-          }
-
-          // if (
-          //   subdomain &&
-          //   user.role !== "LEADER"
-          // ) {
-          //   return null;
-          // }
-
-          if (!isAdminSubdomain && user?.leaderSlug !== subdomain) {
             return null;
           }
 
