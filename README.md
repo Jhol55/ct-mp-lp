@@ -2,6 +2,14 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+## Environment
+
+- Copy `env.example` to `.env` and set:
+  - `BACKEND_URL` (URL do backend Nest)
+  - `AUTH_SECRET` (obrigatório)
+  - `AUTH_URL` (URL pública do frontend em produção)
+  - `AUTH_TRUST_HOST=true` (se estiver atrás de reverse proxy)
+
 First, run the development server:
 
 ```bash

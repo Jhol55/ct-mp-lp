@@ -3,6 +3,9 @@ import Credentials from "next-auth/providers/credentials";
 import { getSubdomainFromHost } from "@/lib/subdomain";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  // Self-host (VPS / reverse proxy): allow Host header to be trusted.
+  // You can also control this via AUTH_TRUST_HOST env var if preferred.
+  trustHost: true,
   providers: [
     Credentials({
       name: "credentials",
