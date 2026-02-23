@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "postinstall": "prisma generate",
     "build": "nest build --builder swc",
     "format": "prettier --write \"src/**/*.{js,mjs}\" \"test/**/*.{js,mjs}\" \"prisma/**/*.{js,mjs}\"",
     "start": "nest start --builder swc --sourceRoot src --entryFile main.js --env-file .env",
@@ -19,6 +20,7 @@
     "test:debug": "node --inspect-brk node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "prisma": "prisma",
+    "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "node prisma/seed.mjs"
   },
