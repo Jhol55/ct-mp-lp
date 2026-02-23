@@ -4,7 +4,7 @@ import { z } from "zod";
 import { auth, signIn, signOut } from "@/lib/auth";
 
 const loginSchema = z.object({
-  email: z.email({
+  email: z.string().email({
     message: "Email inválido",
   }),
   password: z.string().min(6, {
