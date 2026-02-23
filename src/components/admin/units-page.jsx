@@ -275,6 +275,7 @@ export function UnitsPage() {
                   alt="Foto dos planos"
                   width={800}
                   height={400}
+                  unoptimized
                   className="h-auto max-h-80 w-auto object-contain"
                 />
               </div>
