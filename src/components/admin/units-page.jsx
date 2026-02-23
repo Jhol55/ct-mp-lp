@@ -271,11 +271,10 @@ export function UnitsPage() {
             {selectedUnit?.plansImageUrl ? (
               <div className="flex max-h-80 items-center justify-center overflow-hidden rounded-xl border">
                 <Image
-                  src={selectedUnit.plansImageUrl}
+                  src={`/api/image?url=${encodeURIComponent(selectedUnit.plansImageUrl)}`}
                   alt="Foto dos planos"
                   width={800}
                   height={400}
-                  unoptimized
                   className="h-auto max-h-80 w-auto object-contain"
                 />
               </div>
