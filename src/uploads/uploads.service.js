@@ -20,11 +20,12 @@ export class UploadsService {
   constructor(@Inject(ConfigService) config) {
     this.config = config;
 
-    const endpoint = config.get('S3_ENDPOINT');
+    this.endpoint = config.get('S3_ENDPOINT');
+    this.publicEndpoint = config.get('S3_PUBLIC_ENDPOINT') || this.endpoint;
     const accessKeyId = config.get('S3_ACCESS_KEY_ID');
     const secretAccessKey = config.get('S3_SECRET_ACCESS_KEY');
 
-    if (!endpoint || !accessKeyId || !secretAccessKey) {
+    if (!this.endpoint || !accessKeyId || !secretAccessKey) {
       // Defer throwing until method call so app can boot in dev without MinIO.
       this.s3 = null;
       return;
@@ -32,7 +33,7 @@ export class UploadsService {
 
     this.s3 = new S3Client({
       region: config.get('S3_REGION') ?? 'us-east-1',
-      endpoint,
+      endpoint: this.endpoint,
       forcePathStyle:
         String(config.get('S3_FORCE_PATH_STYLE') ?? 'true').toLowerCase() ===
         'true',
@@ -69,7 +70,13 @@ export class UploadsService {
       ContentType: ct,
     });
 
-    const uploadUrl = await getSignedUrl(this.s3, cmd, { expiresIn: 60 * 5 });
+    let uploadUrl = await getSignedUrl(this.s3, cmd, { expiresIn: 60 * 5 });
+
+    // Replace internal endpoint with public endpoint so the browser can reach MinIO
+    if (this.publicEndpoint && this.publicEndpoint !== this.endpoint) {
+      uploadUrl = uploadUrl.replace(this.endpoint, this.publicEndpoint);
+    }
+
     const publicUrl = `${publicBaseUrl.replace(/\/$/, '')}/${key}`;
 
     return { uploadUrl, publicUrl, key };
