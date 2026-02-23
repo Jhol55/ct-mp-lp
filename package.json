@@ -9,7 +9,6 @@
     "postinstall": "prisma generate",
     "build": "nest build --builder swc",
     "format": "prettier --write \"src/**/*.{js,mjs}\" \"test/**/*.{js,mjs}\" \"prisma/**/*.{js,mjs}\"",
-    "prestart": "node scripts/bootstrap-db.mjs",
     "start": "nest start --builder swc --sourceRoot src --entryFile main.js --env-file .env",
     "start:dev": "nest start --watch --builder swc --sourceRoot src --entryFile main.js --env-file .env",
     "start:debug": "nest start --debug --watch",
