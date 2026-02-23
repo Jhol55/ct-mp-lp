@@ -12,9 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const BILLING_MODELS = [
-  { value: "MONTHLY", label: "Monthly" },
-  { value: "SEMIANNUAL", label: "Semiannual" },
-  { value: "ANNUAL", label: "Annual" },
+  { value: "MONTHLY", label: "Mensal" },
+  { value: "SEMIANNUAL", label: "Semestral" },
+  { value: "ANNUAL", label: "Anual" },
 ];
 
 function formatMoneyBRLFromCents(cents) {
@@ -127,7 +127,7 @@ export function UnitsPage() {
           body: file,
         });
         if (!put.ok) {
-          throw new Error(`Upload failed (${put.status})`);
+          throw new Error(`Upload falhou (${put.status})`);
         }
 
         await updateUnit(selectedUnitId, {
@@ -179,27 +179,27 @@ export function UnitsPage() {
       <aside className="w-72 shrink-0 rounded-2xl border bg-background p-4">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <div className="text-lg font-semibold">Units</div>
-            <div className="text-xs text-muted-foreground">Your units</div>
+            <div className="text-lg font-semibold">Unidades</div>
+            <div className="text-xs text-muted-foreground">Suas unidades</div>
           </div>
           <Button
             size="icon"
             variant="outline"
             onClick={handleCreateUnit}
             disabled={isPending || !newUnitName.trim()}
-            title="Add unit"
+            title="Adicionar unidade"
           >
             +
           </Button>
         </div>
 
         <div className="mb-4 space-y-2">
-          <Label htmlFor="newUnitName">Unit name</Label>
+          <Label htmlFor="newUnitName">Nome da unidade</Label>
           <Input
             id="newUnitName"
             value={newUnitName}
             onChange={(e) => setNewUnitName(e.target.value)}
-            placeholder="Ex: Downtown Gym"
+            placeholder="Ex: Academia Centro"
           />
         </div>
 
@@ -220,7 +220,9 @@ export function UnitsPage() {
             );
           })}
           {!units.length ? (
-            <div className="text-sm text-muted-foreground">No units yet.</div>
+            <div className="text-sm text-muted-foreground">
+              Nenhuma unidade ainda.
+            </div>
           ) : null}
         </div>
       </aside>
@@ -228,29 +230,29 @@ export function UnitsPage() {
       <div className="flex-1 space-y-6">
         {error ? (
           <Alert variant="destructive">
-            <AlertTitle>Error</AlertTitle>
+            <AlertTitle>Erro</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         ) : null}
 
         <div className="text-3xl font-semibold">
-          {selectedUnit?.name || "Select a unit"}
+          {selectedUnit?.name || "Selecione uma unidade"}
         </div>
         <div className="text-sm text-muted-foreground">
-          Manage plans and pricing for this unit
+          Gerencie planos e valores desta unidade
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Plans image</CardTitle>
+            <CardTitle>Foto dos planos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Upload the image that contains all available plans
+              Faça upload da imagem que contém todos os planos
             </p>
 
             <div className="rounded-xl border border-dashed p-6 text-center">
-              <Label htmlFor="plansImage">Choose file</Label>
+              <Label htmlFor="plansImage">Escolher arquivo</Label>
               <Input
                 id="plansImage"
                 type="file"
@@ -265,7 +267,7 @@ export function UnitsPage() {
               <div className="overflow-hidden rounded-xl border">
                 <Image
                   src={selectedUnit.plansImageUrl}
-                  alt="Plans image"
+                  alt="Foto dos planos"
                   width={1200}
                   height={800}
                   className="h-auto w-full"
@@ -277,12 +279,12 @@ export function UnitsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Add plan</CardTitle>
+            <CardTitle>Adicionar plano</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <form onSubmit={handleCreatePlan} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="planName">Plan name</Label>
+                <Label htmlFor="planName">Nome do plano</Label>
                 <Input
                   id="planName"
                   value={planName}
@@ -293,25 +295,25 @@ export function UnitsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="frequencyLabel">Frequency</Label>
+                <Label htmlFor="frequencyLabel">Frequência</Label>
                 <Input
                   id="frequencyLabel"
                   value={frequencyLabel}
                   onChange={(e) => setFrequencyLabel(e.target.value)}
-                  placeholder="Ex: 4–5x/week"
+                  placeholder="Ex: 4 a 5x semana"
                   disabled={!selectedUnitId || isPending}
                 />
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="text-sm font-medium">Billing models</div>
+                <div className="text-sm font-medium">Modelos de pagamento</div>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={addPriceRow}
                   disabled={!selectedUnitId || isPending}
                 >
-                  + Add model
+                  + Adicionar modelo
                 </Button>
               </div>
 
@@ -319,7 +321,7 @@ export function UnitsPage() {
                 {priceRows.map((row, idx) => (
                   <div key={idx} className="grid grid-cols-12 gap-3">
                     <div className="col-span-6">
-                      <Label>Model</Label>
+                      <Label>Modelo</Label>
                       <select
                         value={row.model}
                         onChange={(e) => {
@@ -339,7 +341,7 @@ export function UnitsPage() {
                       </select>
                     </div>
                     <div className="col-span-5">
-                      <Label>Price (BRL)</Label>
+                      <Label>Valor (R$)</Label>
                       <Input
                         value={row.price}
                         onChange={(e) => {
@@ -359,7 +361,7 @@ export function UnitsPage() {
                         variant="ghost"
                         onClick={() => removePriceRow(idx)}
                         disabled={isPending || priceRows.length <= 1}
-                        title="Remove"
+                        title="Remover"
                       >
                         🗑
                       </Button>
@@ -369,7 +371,7 @@ export function UnitsPage() {
               </div>
 
               <Button type="submit" disabled={!canSubmitPlan || isPending}>
-                Add plan
+                Adicionar plano
               </Button>
             </form>
           </CardContent>
@@ -377,7 +379,7 @@ export function UnitsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Plans</CardTitle>
+            <CardTitle>Planos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {selectedUnit?.plans?.length ? (
@@ -385,7 +387,7 @@ export function UnitsPage() {
                 <div key={p.id} className="rounded-xl border p-4">
                   <div className="font-medium">{p.name}</div>
                   <div className="text-sm text-muted-foreground">
-                    Frequency: {p.frequencyLabel}
+                    Frequência: {p.frequencyLabel}
                   </div>
                   <div className="mt-2 space-y-1 text-sm">
                     {p.prices?.map((pr) => (
@@ -403,7 +405,9 @@ export function UnitsPage() {
                 </div>
               ))
             ) : (
-              <div className="text-sm text-muted-foreground">No plans yet.</div>
+              <div className="text-sm text-muted-foreground">
+                Nenhum plano ainda.
+              </div>
             )}
           </CardContent>
         </Card>

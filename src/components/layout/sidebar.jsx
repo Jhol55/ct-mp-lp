@@ -41,7 +41,7 @@ export function AppSidebar() {
       icon: Home,
     },
     {
-      title: "Units",
+      title: "Unidades",
       url: unitsUrl,
       icon: Building2,
     },
