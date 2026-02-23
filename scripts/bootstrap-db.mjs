@@ -10,7 +10,7 @@ function run(cmd) {
 
 async function tableExists(qualifiedName) {
   const rows = await prisma.$queryRawUnsafe(
-    `SELECT to_regclass('${qualifiedName}') as name`,
+    `SELECT to_regclass('${qualifiedName}')::text as name`,
   );
   const name = rows?.[0]?.name ?? null;
   return !!name;
