@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
@@ -17,7 +17,7 @@ function normalizeExt(ext) {
 
 @Injectable()
 export class UploadsService {
-  constructor(config) {
+  constructor(@Inject(ConfigService) config) {
     this.config = config;
 
     const endpoint = config.get('S3_ENDPOINT');

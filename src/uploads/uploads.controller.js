@@ -1,12 +1,12 @@
 /* eslint-disable no-unused-vars */
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Inject } from '@nestjs/common';
 import { UploadsService } from './uploads.service';
 import { AdminGuard } from '../common/guards/admin.guard';
 import { PresignDto } from './dto/presign.dto';
 
 @Controller('uploads')
 export class UploadsController {
-  constructor(uploads) {
+  constructor(@Inject(UploadsService) uploads) {
     this.uploads = uploads;
   }
 

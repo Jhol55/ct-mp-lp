@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Inject,
   Param,
   Patch,
   Post,
@@ -14,7 +15,7 @@ import { AdminGuard } from '../common/guards/admin.guard';
 @UseGuards(AdminGuard)
 @Controller('units')
 export class UnitsController {
-  constructor(units) {
+  constructor(@Inject(UnitsService) units) {
     this.units = units;
   }
 

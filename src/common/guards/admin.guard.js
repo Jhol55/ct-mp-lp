@@ -1,11 +1,19 @@
 /* eslint-disable no-unused-vars */
-import { CanActivate, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  Injectable,
+  UnauthorizedException,
+  Inject,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AdminGuard implements CanActivate {
-  constructor(jwt, config) {
+  constructor(
+    @Inject(JwtService) jwt,
+    @Inject(ConfigService) config,
+  ) {
     this.jwt = jwt;
     this.config = config;
   }

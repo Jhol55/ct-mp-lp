@@ -1,10 +1,15 @@
 /* eslint-disable no-unused-vars */
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  Inject,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 @Injectable()
 export class UnitsService {
-  constructor(prisma) {
+  constructor(@Inject(PrismaService) prisma) {
     this.prisma = prisma;
   }
 
