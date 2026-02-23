@@ -21,6 +21,19 @@ export function getSubdomainFromHost(hostHeader) {
   const isIPv6 = host.includes(":");
   if (isIPv4 || isIPv6) return "";
 
+  // EasyPanel host format: {app}.{tenant}.easypanel.host
+  // Examples:
+  // - ct-mp-ct-mp-frontend.iajhnu.easypanel.host -> ct-mp-ct-mp-frontend
+  // - admin.ct-mp-ct-mp-frontend.iajhnu.easypanel.host -> admin.ct-mp-ct-mp-frontend
+  if (host.endsWith(".easypanel.host")) {
+    const parts = host.split(".");
+    // Need at least: app + tenant + easypanel + host
+    if (parts.length >= 4) {
+      return parts.slice(0, -3).join(".");
+    }
+    return "";
+  }
+
   const baseDomains = ["maodepedra.com.br", "localhost"];
 
   for (const base of baseDomains) {
