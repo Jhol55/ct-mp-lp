@@ -269,13 +269,13 @@ export function UnitsPage() {
             </div>
 
             {selectedUnit?.plansImageUrl ? (
-              <div className="overflow-hidden rounded-xl border">
+              <div className="flex max-h-80 items-center justify-center overflow-hidden rounded-xl border">
                 <Image
                   src={selectedUnit.plansImageUrl}
                   alt="Foto dos planos"
-                  width={1200}
-                  height={800}
-                  className="h-auto w-full"
+                  width={800}
+                  height={400}
+                  className="h-auto max-h-80 w-auto object-contain"
                 />
               </div>
             ) : null}
