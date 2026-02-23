@@ -1,6 +1,5 @@
 import { UnitsPage } from "@/components/admin/units-page";
 
-// Keep legacy PT-BR route working.
 export default function AdminUnitsPage() {
   return <UnitsPage />;
 }
