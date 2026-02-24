@@ -79,8 +79,8 @@ export function AppSidebar() {
                   <span className="text-sm font-semibold">T</span>
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Travel</span>
-                  <span className="truncate text-xs text-sidebar-foreground/70">App</span>
+                  <span className="truncate font-semibold">Mão de Pedra</span>
+                  <span className="truncate text-xs text-sidebar-foreground/70">Centro de Treinamento</span>
                 </div>
               </Link>
             </SidebarMenuButton>
