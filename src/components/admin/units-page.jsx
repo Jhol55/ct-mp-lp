@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Select,
@@ -72,6 +73,9 @@ export function UnitsPage() {
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [planName, setPlanName] = useState("");
   const [frequencyLabel, setFrequencyLabel] = useState("");
+  const [minAge, setMinAge] = useState("");
+  const [maxAge, setMaxAge] = useState("");
+  const [notes, setNotes] = useState("");
   const [priceRows, setPriceRows] = useState([{ model: "MONTHLY", price: "" }]);
 
   // Modal: edit plan
@@ -79,6 +83,9 @@ export function UnitsPage() {
   const [editPlanId, setEditPlanId] = useState(null);
   const [editPlanName, setEditPlanName] = useState("");
   const [editFrequencyLabel, setEditFrequencyLabel] = useState("");
+  const [editMinAge, setEditMinAge] = useState("");
+  const [editMaxAge, setEditMaxAge] = useState("");
+  const [editNotes, setEditNotes] = useState("");
   const [editPriceRows, setEditPriceRows] = useState([]);
 
   const canSubmitPlan = useMemo(() => {
@@ -237,11 +244,17 @@ export function UnitsPage() {
         await createPlan(selectedUnitId, {
           name: planName.trim(),
           frequencyLabel: frequencyLabel.trim(),
+          minAge: minAge.trim() ? Number(minAge) : null,
+          maxAge: maxAge.trim() ? Number(maxAge) : null,
+          notes: notes.trim() || null,
           prices,
         });
 
         setPlanName("");
         setFrequencyLabel("");
+        setMinAge("");
+        setMaxAge("");
+        setNotes("");
         setPriceRows([{ model: "MONTHLY", price: "" }]);
         setPlanModalOpen(false);
         await refreshSelectedUnit(selectedUnitId);
@@ -277,6 +290,9 @@ export function UnitsPage() {
     setEditPlanId(plan.id);
     setEditPlanName(plan.name);
     setEditFrequencyLabel(plan.frequencyLabel);
+    setEditMinAge(plan.minAge ? String(plan.minAge) : "");
+    setEditMaxAge(plan.maxAge ? String(plan.maxAge) : "");
+    setEditNotes(plan.notes || "");
     setEditPriceRows(
       plan.prices?.length
         ? plan.prices.map((pr) => ({
@@ -315,6 +331,9 @@ export function UnitsPage() {
         await updatePlan(selectedUnitId, editPlanId, {
           name: editPlanName.trim(),
           frequencyLabel: editFrequencyLabel.trim(),
+          minAge: editMinAge.trim() ? Number(editMinAge) : null,
+          maxAge: editMaxAge.trim() ? Number(editMaxAge) : null,
+          notes: editNotes.trim() || null,
           prices,
         });
 
@@ -685,6 +704,45 @@ export function UnitsPage() {
               </Select>
             </div>
 
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="modalMinAge">Idade mínima</Label>
+                <Input
+                  id="modalMinAge"
+                  type="number"
+                  min="0"
+                  value={minAge}
+                  onChange={(e) => setMinAge(e.target.value)}
+                  placeholder="Ex: 18 (opcional)"
+                  disabled={isPending}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="modalMaxAge">Idade máxima</Label>
+                <Input
+                  id="modalMaxAge"
+                  type="number"
+                  min="0"
+                  value={maxAge}
+                  onChange={(e) => setMaxAge(e.target.value)}
+                  placeholder="Ex: 65 (opcional)"
+                  disabled={isPending}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="modalNotes">Observações</Label>
+              <Textarea
+                id="modalNotes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Observações sobre o plano (opcional)"
+                disabled={isPending}
+                rows={4}
+              />
+            </div>
+
             <div className="flex items-center justify-between">
               <div className="text-sm font-medium">Modelos de pagamento</div>
               <Button
@@ -764,6 +822,9 @@ export function UnitsPage() {
                   setPlanModalOpen(false);
                   setPlanName("");
                   setFrequencyLabel("");
+                  setMinAge("");
+                  setMaxAge("");
+                  setNotes("");
                   setPriceRows([{ model: "MONTHLY", price: "" }]);
                 }}
               >
@@ -859,6 +920,45 @@ export function UnitsPage() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="editMinAge">Idade mínima</Label>
+                <Input
+                  id="editMinAge"
+                  type="number"
+                  min="0"
+                  value={editMinAge}
+                  onChange={(e) => setEditMinAge(e.target.value)}
+                  placeholder="Ex: 18 (opcional)"
+                  disabled={isPending}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="editMaxAge">Idade máxima</Label>
+                <Input
+                  id="editMaxAge"
+                  type="number"
+                  min="0"
+                  value={editMaxAge}
+                  onChange={(e) => setEditMaxAge(e.target.value)}
+                  placeholder="Ex: 65 (opcional)"
+                  disabled={isPending}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="editNotes">Observações</Label>
+              <Textarea
+                id="editNotes"
+                value={editNotes}
+                onChange={(e) => setEditNotes(e.target.value)}
+                placeholder="Observações sobre o plano (opcional)"
+                disabled={isPending}
+                rows={4}
+              />
             </div>
 
             <div className="flex items-center justify-between">
