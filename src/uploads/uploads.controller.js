@@ -16,6 +16,7 @@ export class UploadsController {
     return this.uploads.presignUpload({
       contentType: body?.contentType,
       ext: body?.ext,
+      type: body?.type,
     });
   }
 }

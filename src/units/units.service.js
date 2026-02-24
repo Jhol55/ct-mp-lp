@@ -67,6 +67,10 @@ export class UnitsService {
       data.state = patch.state ? String(patch.state).trim() : null;
     if (patch?.zipCode !== undefined)
       data.zipCode = patch.zipCode ? String(patch.zipCode).trim() : null;
+    if (patch?.scheduleImageUrl !== undefined)
+      data.scheduleImageUrl = patch.scheduleImageUrl ? String(patch.scheduleImageUrl) : null;
+    if (patch?.scheduleImageKey !== undefined)
+      data.scheduleImageKey = patch.scheduleImageKey ? String(patch.scheduleImageKey) : null;
 
     // Delete old image from MinIO when a new one is being set
     if (patch?.plansImageKey) {
@@ -76,6 +80,17 @@ export class UnitsService {
       });
       if (existing?.plansImageKey && existing.plansImageKey !== patch.plansImageKey) {
         await this.uploads.deleteObject(existing.plansImageKey);
+      }
+    }
+
+    // Delete old schedule image from MinIO when a new one is being set
+    if (patch?.scheduleImageKey) {
+      const existing = await this.prisma.unit.findUnique({
+        where: { id },
+        select: { scheduleImageKey: true },
+      });
+      if (existing?.scheduleImageKey && existing.scheduleImageKey !== patch.scheduleImageKey) {
+        await this.uploads.deleteObject(existing.scheduleImageKey);
       }
     }
 

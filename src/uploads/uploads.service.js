@@ -41,7 +41,7 @@ export class UploadsService {
     });
   }
 
-  async presignUpload({ contentType, ext }) {
+  async presignUpload({ contentType, ext, type = 'plans' }) {
     const bucket = this.config.get('S3_BUCKET');
     const publicBaseUrl = this.config.get('S3_PUBLIC_BASE_URL');
 
@@ -61,8 +61,14 @@ export class UploadsService {
       throw new BadRequestException('Only image uploads are allowed');
     }
 
+    const typeStr = String(type ?? 'plans').trim().toLowerCase();
+    const validTypes = ['plans', 'schedule'];
+    if (!validTypes.includes(typeStr)) {
+      throw new BadRequestException(`Invalid type. Must be one of: ${validTypes.join(', ')}`);
+    }
+
     const id = crypto.randomUUID();
-    const key = `units/plans/${id}.${safeExt}`;
+    const key = `units/${typeStr}/${id}.${safeExt}`;
 
     const cmd = new PutObjectCommand({
       Bucket: bucket,
