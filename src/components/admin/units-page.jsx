@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { ChevronDown, Pencil, Upload } from "lucide-react";
+import { Pencil, Upload } from "lucide-react";
 import { createPlan, updatePlan } from "@/actions/plans";
 import { createUnit, getUnit, listUnits, updateUnit } from "@/actions/units";
 import { presignUpload } from "@/actions/uploads";
@@ -11,6 +11,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -558,26 +565,26 @@ export function UnitsPage() {
                 <div key={idx} className="grid grid-cols-12 gap-3 items-end">
                   <div className="col-span-6">
                     <Label>Modelo</Label>
-                    <div className="relative mt-2">
-                      <select
-                        value={row.model}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setPriceRows((rows) =>
-                            rows.map((r, i) => (i === idx ? { ...r, model: v } : r)),
-                          );
-                        }}
-                        disabled={isPending}
-                        className="h-11 w-full rounded-xl border bg-background px-3 pr-10 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 appearance-none"
-                      >
+                    <Select
+                      value={row.model}
+                      onValueChange={(v) => {
+                        setPriceRows((rows) =>
+                          rows.map((r, i) => (i === idx ? { ...r, model: v } : r)),
+                        );
+                      }}
+                      disabled={isPending}
+                    >
+                      <SelectTrigger className="mt-2 h-11 w-full rounded-xl">
+                        <SelectValue placeholder="Selecione o modelo" />
+                      </SelectTrigger>
+                      <SelectContent>
                         {BILLING_MODELS.map((m) => (
-                          <option key={m.value} value={m.value}>
+                          <SelectItem key={m.value} value={m.value}>
                             {m.label}
-                          </option>
+                          </SelectItem>
                         ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-                    </div>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="col-span-5">
                     <Label>Valor (R$)</Label>
@@ -725,26 +732,26 @@ export function UnitsPage() {
                 <div key={idx} className="grid grid-cols-12 gap-3 items-end">
                   <div className="col-span-6">
                     <Label>Modelo</Label>
-                    <div className="relative mt-2">
-                      <select
-                        value={row.model}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          setEditPriceRows((rows) =>
-                            rows.map((r, i) => (i === idx ? { ...r, model: v } : r)),
-                          );
-                        }}
-                        disabled={isPending}
-                        className="h-9 w-full rounded-xl border bg-background px-3 pr-10 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 appearance-none"
-                      >
+                    <Select
+                      value={row.model}
+                      onValueChange={(v) => {
+                        setEditPriceRows((rows) =>
+                          rows.map((r, i) => (i === idx ? { ...r, model: v } : r)),
+                        );
+                      }}
+                      disabled={isPending}
+                    >
+                      <SelectTrigger className="mt-2 h-11 w-full rounded-xl">
+                        <SelectValue placeholder="Selecione o modelo" />
+                      </SelectTrigger>
+                      <SelectContent>
                         {BILLING_MODELS.map((m) => (
-                          <option key={m.value} value={m.value}>
+                          <SelectItem key={m.value} value={m.value}>
                             {m.label}
-                          </option>
+                          </SelectItem>
                         ))}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-                    </div>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="col-span-5">
                     <Label>Valor (R$)</Label>
