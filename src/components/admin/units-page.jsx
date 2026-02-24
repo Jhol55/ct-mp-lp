@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { Pencil, Upload } from "lucide-react";
+import { ChevronDown, Pencil, Upload } from "lucide-react";
 import { createPlan, updatePlan } from "@/actions/plans";
 import { createUnit, getUnit, listUnits, updateUnit } from "@/actions/units";
 import { presignUpload } from "@/actions/uploads";
@@ -555,26 +555,29 @@ export function UnitsPage() {
 
             <div className="space-y-3">
               {priceRows.map((row, idx) => (
-                <div key={idx} className="grid grid-cols-12 gap-3">
+                <div key={idx} className="grid grid-cols-12 gap-3 items-end">
                   <div className="col-span-6">
                     <Label>Modelo</Label>
-                    <select
-                      value={row.model}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setPriceRows((rows) =>
-                          rows.map((r, i) => (i === idx ? { ...r, model: v } : r)),
-                        );
-                      }}
-                      disabled={isPending}
-                      className="mt-2 flex h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
-                    >
-                      {BILLING_MODELS.map((m) => (
-                        <option key={m.value} value={m.value}>
-                          {m.label}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative mt-2">
+                      <select
+                        value={row.model}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setPriceRows((rows) =>
+                            rows.map((r, i) => (i === idx ? { ...r, model: v } : r)),
+                          );
+                        }}
+                        disabled={isPending}
+                        className="h-11 w-full rounded-xl border bg-background px-3 pr-10 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 appearance-none"
+                      >
+                        {BILLING_MODELS.map((m) => (
+                          <option key={m.value} value={m.value}>
+                            {m.label}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                    </div>
                   </div>
                   <div className="col-span-5">
                     <Label>Valor (R$)</Label>
@@ -591,7 +594,7 @@ export function UnitsPage() {
                       className="mt-2"
                     />
                   </div>
-                  <div className="col-span-1 flex items-end">
+                  <div className="col-span-1 flex items-center justify-center pb-2">
                     <Button
                       type="button"
                       variant="ghost"
@@ -599,6 +602,7 @@ export function UnitsPage() {
                       onClick={() => removePriceRow(idx)}
                       disabled={isPending || priceRows.length <= 1}
                       title="Remover"
+                      className="h-11 w-11"
                     >
                       ✕
                     </Button>
@@ -718,26 +722,29 @@ export function UnitsPage() {
 
             <div className="space-y-3">
               {editPriceRows.map((row, idx) => (
-                <div key={idx} className="grid grid-cols-12 gap-3">
+                <div key={idx} className="grid grid-cols-12 gap-3 items-end">
                   <div className="col-span-6">
                     <Label>Modelo</Label>
-                    <select
-                      value={row.model}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setEditPriceRows((rows) =>
-                          rows.map((r, i) => (i === idx ? { ...r, model: v } : r)),
-                        );
-                      }}
-                      disabled={isPending}
-                      className="mt-2 flex h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
-                    >
-                      {BILLING_MODELS.map((m) => (
-                        <option key={m.value} value={m.value}>
-                          {m.label}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative mt-2">
+                      <select
+                        value={row.model}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setEditPriceRows((rows) =>
+                            rows.map((r, i) => (i === idx ? { ...r, model: v } : r)),
+                          );
+                        }}
+                        disabled={isPending}
+                        className="h-11 w-full rounded-xl border bg-background px-3 pr-10 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 appearance-none"
+                      >
+                        {BILLING_MODELS.map((m) => (
+                          <option key={m.value} value={m.value}>
+                            {m.label}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                    </div>
                   </div>
                   <div className="col-span-5">
                     <Label>Valor (R$)</Label>
@@ -754,7 +761,7 @@ export function UnitsPage() {
                       className="mt-2"
                     />
                   </div>
-                  <div className="col-span-1 flex items-end">
+                  <div className="col-span-1 flex items-center justify-center pb-2">
                     <Button
                       type="button"
                       variant="ghost"
@@ -762,6 +769,7 @@ export function UnitsPage() {
                       onClick={() => removeEditPriceRow(idx)}
                       disabled={isPending || editPriceRows.length <= 1}
                       title="Remover"
+                      className="h-11 w-11"
                     >
                       ✕
                     </Button>
