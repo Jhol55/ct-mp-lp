@@ -594,7 +594,7 @@ export function UnitsPage() {
                       className="mt-2"
                     />
                   </div>
-                  <div className="col-span-1 flex items-center justify-center pb-2">
+                  <div className="col-span-1 flex items-center justify-center">
                     <Button
                       type="button"
                       variant="ghost"
@@ -735,7 +735,7 @@ export function UnitsPage() {
                           );
                         }}
                         disabled={isPending}
-                        className="h-11 w-full rounded-xl border bg-background px-3 pr-10 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 appearance-none"
+                        className="h-9 w-full rounded-xl border bg-background px-3 pr-10 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60 appearance-none"
                       >
                         {BILLING_MODELS.map((m) => (
                           <option key={m.value} value={m.value}>
