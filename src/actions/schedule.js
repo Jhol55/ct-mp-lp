@@ -26,16 +26,3 @@ export async function bulkUpdateScheduleSlots(unitId, slots) {
     body: JSON.stringify({ slots }),
   });
 }
-
-// Helper para gerar nome da aula a partir de modality e classType
-export function formatClassName(modality, classType) {
-  if (!modality) return null;
-  
-  const modalityLabel = modality === "MUAY_THAI" ? "Muay Thai" : "Funcional";
-  const typeLabel = classType === "KIDS" ? "Kids" : null;
-  
-  if (typeLabel) {
-    return `${modalityLabel} - ${typeLabel}`;
-  }
-  return modalityLabel;
-}

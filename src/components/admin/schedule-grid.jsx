@@ -1,7 +1,20 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { getSchedule, upsertScheduleSlot, deleteScheduleSlot, formatClassName } from "@/actions/schedule";
+import { getSchedule, upsertScheduleSlot, deleteScheduleSlot } from "@/actions/schedule";
+
+// Helper para gerar nome da aula a partir de modality e classType
+function formatClassName(modality, classType) {
+  if (!modality) return null;
+  
+  const modalityLabel = modality === "MUAY_THAI" ? "Muay Thai" : "Funcional";
+  const typeLabel = classType === "KIDS" ? "Kids" : null;
+  
+  if (typeLabel) {
+    return `${modalityLabel} - ${typeLabel}`;
+  }
+  return modalityLabel;
+}
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
