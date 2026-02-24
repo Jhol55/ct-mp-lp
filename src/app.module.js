@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { UploadsModule } from './uploads/uploads.module.js';
 import { UnitsModule } from './units/units.module.js';
 import { ScheduleModule } from './schedule/schedule.module.js';
+import { PartnersModule } from './partners/partners.module.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ScheduleModule } from './schedule/schedule.module.js';
     UploadsModule,
     UnitsModule,
     ScheduleModule,
+    PartnersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

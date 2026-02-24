@@ -60,6 +60,7 @@ model Unit {
   plans              Plan[]
   scheduleSlots      ScheduleSlot[]
   scheduleVisibility ScheduleVisibility?
+  partners           Partner[]
 
   @@map("units")
 }
@@ -126,4 +127,18 @@ model ScheduleVisibility {
   unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
 
   @@map("schedule_visibility")
+}
+
+model Partner {
+  id            String   @id @default(uuid())
+  unitId       String
+  name         String   // nome do parceiro, ex: "Wellhub/Gympass", "Totalpass"
+  rulesAndNotes String? // regras e observações sobre o parceiro
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@index([unitId])
+  @@map("partners")
 }
