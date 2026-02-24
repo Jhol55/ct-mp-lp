@@ -52,6 +52,9 @@ model Plan {
   unitId         String
   name           String
   frequencyLabel String
+  minAge         Int?
+  maxAge         Int?
+  notes          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

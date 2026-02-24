@@ -100,11 +100,25 @@ export class UnitsService {
         priceCents: Number(p.priceCents),
       }));
 
+    const minAge =
+      payload?.minAge !== undefined && payload.minAge !== null && payload.minAge !== ''
+        ? Number(payload.minAge)
+        : null;
+    const maxAge =
+      payload?.maxAge !== undefined && payload.maxAge !== null && payload.maxAge !== ''
+        ? Number(payload.maxAge)
+        : null;
+
+    const notes = payload?.notes ? String(payload.notes).trim() : null;
+
     return this.prisma.plan.create({
       data: {
         unitId,
         name,
         frequencyLabel,
+        minAge: Number.isFinite(minAge) && minAge >= 0 ? minAge : null,
+        maxAge: Number.isFinite(maxAge) && maxAge >= 0 ? maxAge : null,
+        notes: notes || null,
         prices: createPrices.length ? { create: createPrices } : undefined,
       },
       include: { prices: true },
@@ -125,6 +139,23 @@ export class UnitsService {
       const freq = String(payload.frequencyLabel).trim();
       if (!freq) throw new BadRequestException('frequencyLabel is required');
       data.frequencyLabel = freq;
+    }
+    if (payload?.minAge !== undefined) {
+      const minAge =
+        payload.minAge !== null && payload.minAge !== ''
+          ? Number(payload.minAge)
+          : null;
+      data.minAge = Number.isFinite(minAge) && minAge >= 0 ? minAge : null;
+    }
+    if (payload?.maxAge !== undefined) {
+      const maxAge =
+        payload.maxAge !== null && payload.maxAge !== ''
+          ? Number(payload.maxAge)
+          : null;
+      data.maxAge = Number.isFinite(maxAge) && maxAge >= 0 ? maxAge : null;
+    }
+    if (payload?.notes !== undefined) {
+      data.notes = payload.notes ? String(payload.notes).trim() : null;
     }
 
     // If prices are provided, replace all existing prices
