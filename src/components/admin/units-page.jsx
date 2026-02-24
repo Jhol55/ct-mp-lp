@@ -71,6 +71,10 @@ export function UnitsPage() {
   const [state, setState] = useState("");
   const [zipCode, setZipCode] = useState("");
 
+  // Payment and cancellation fields
+  const [paymentMethods, setPaymentMethods] = useState("");
+  const [cancellationRules, setCancellationRules] = useState("");
+
   // Modal: new unit
   const [unitModalOpen, setUnitModalOpen] = useState(false);
   const [newUnitName, setNewUnitName] = useState("");
@@ -168,6 +172,8 @@ export function UnitsPage() {
       setCity(selectedUnit.city || "");
       setState(selectedUnit.state || "");
       setZipCode(selectedUnit.zipCode || "");
+      setPaymentMethods(selectedUnit.paymentMethods || "");
+      setCancellationRules(selectedUnit.cancellationRules || "");
       setHasUnsavedChanges(false);
     }
   }, [selectedUnit]);
@@ -308,6 +314,8 @@ export function UnitsPage() {
           city,
           state,
           zipCode,
+          paymentMethods,
+          cancellationRules,
         });
 
         // Salvar mudanças do grid de horários
@@ -546,6 +554,38 @@ export function UnitsPage() {
 
           {/* ── Tab: Planos ── */}
           <TabsContent value="planos" className="space-y-6 mt-6">
+            {/* ── Payment methods and cancellation rules ── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="paymentMethods">Formas de Pagamento</Label>
+                <Textarea
+                  id="paymentMethods"
+                  value={paymentMethods}
+                  onChange={(e) => {
+                    setPaymentMethods(e.target.value);
+                    setHasUnsavedChanges(true);
+                  }}
+                  placeholder="Descreva as formas de pagamento aceitas..."
+                  className="min-h-[120px]"
+                  disabled={!selectedUnitId || isPending}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cancellationRules">Regras de Cancelamento</Label>
+                <Textarea
+                  id="cancellationRules"
+                  value={cancellationRules}
+                  onChange={(e) => {
+                    setCancellationRules(e.target.value);
+                    setHasUnsavedChanges(true);
+                  }}
+                  placeholder="Descreva as regras de cancelamento..."
+                  className="min-h-[120px]"
+                  disabled={!selectedUnitId || isPending}
+                />
+              </div>
+            </div>
+
             {/* ── Plans image upload ── */}
             <Card>
               <CardHeader>
