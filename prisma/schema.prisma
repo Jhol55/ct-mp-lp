@@ -92,14 +92,15 @@ model PlanPrice {
 }
 
 model ScheduleSlot {
-  id        String    @id @default(uuid())
-  unitId    String
-  dayOfWeek Int       // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sáb
-  time      String    // formato "HH:MM", ex: "05:00", "18:30"
-  modality  Modality? // modalidade: MUAY_THAI ou FUNCIONAL
-  classType ClassType @default(LIVRE) // tipo: LIVRE ou KIDS
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id             String    @id @default(uuid())
+  unitId         String
+  dayOfWeek      Int       // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sáb
+  time           String    // formato "HH:MM", ex: "05:00", "18:30"
+  modality       Modality? // modalidade: MUAY_THAI ou FUNCIONAL
+  classType      ClassType @default(LIVRE) // tipo: LIVRE ou KIDS
+  durationMinutes Int      @default(60) // duração da aula em minutos, padrão 1 hora
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
 

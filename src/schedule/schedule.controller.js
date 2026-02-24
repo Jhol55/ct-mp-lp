@@ -31,8 +31,8 @@ export class ScheduleController {
     @Param('unitId') unitId,
     @Body() body,
   ) {
-    const { dayOfWeek, time, modality, classType } = body;
-    return this.schedule.upsertSlot(unitId, dayOfWeek, time, modality, classType);
+    const { dayOfWeek, time, modality, classType, durationMinutes } = body;
+    return this.schedule.upsertSlot(unitId, dayOfWeek, time, modality, classType, durationMinutes);
   }
 
   @Delete('slots')
