@@ -450,7 +450,7 @@ export function UnitsPage() {
   return (
     <div className="flex min-h-[calc(100vh-64px)] gap-6">
       {/* ── Sidebar: units list ── */}
-      <aside className="w-[14rem] shrink-0 rounded-2xl border bg-background p-4">
+      <aside className="w-56 shrink-0 rounded-2xl border bg-background p-4">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <div className="text-lg font-semibold">Unidades</div>
