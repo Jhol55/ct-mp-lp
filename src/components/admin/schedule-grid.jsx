@@ -1,10 +1,16 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { getSchedule, upsertScheduleSlot, deleteScheduleSlot } from "@/actions/schedule";
+import { getSchedule, upsertScheduleSlot, deleteScheduleSlot, formatClassName } from "@/actions/schedule";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +43,16 @@ function generateTimeSlots() {
 
 const TIME_SLOTS = generateTimeSlots();
 
+const MODALITIES = [
+  { value: "MUAY_THAI", label: "Muay Thai" },
+  { value: "FUNCIONAL", label: "Funcional" },
+];
+
+const CLASS_TYPES = [
+  { value: "LIVRE", label: "Livre" },
+  { value: "KIDS", label: "Kids" },
+];
+
 export function ScheduleGrid({ unitId, disabled = false }) {
   const [slots, setSlots] = useState([]);
   const [isPending, startTransition] = useTransition();
@@ -46,7 +62,8 @@ export function ScheduleGrid({ unitId, disabled = false }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
-  const [className, setClassName] = useState("");
+  const [modality, setModality] = useState("");
+  const [classType, setClassType] = useState("LIVRE");
 
   async function loadSchedule() {
     if (!unitId) return;
@@ -75,7 +92,8 @@ export function ScheduleGrid({ unitId, disabled = false }) {
     const slot = getSlot(dayOfWeek, time);
     setSelectedDay(dayOfWeek);
     setSelectedTime(time);
-    setClassName(slot?.className || "");
+    setModality(slot?.modality || "");
+    setClassType(slot?.classType || "LIVRE");
     setModalOpen(true);
   }
 
@@ -83,11 +101,16 @@ export function ScheduleGrid({ unitId, disabled = false }) {
     setModalOpen(false);
     setSelectedDay(null);
     setSelectedTime(null);
-    setClassName("");
+    setModality("");
+    setClassType("LIVRE");
   }
 
   async function handleSave() {
     if (!unitId || selectedDay === null || !selectedTime) return;
+    if (!modality) {
+      setError("Selecione uma modalidade");
+      return;
+    }
 
     startTransition(async () => {
       try {
@@ -96,7 +119,8 @@ export function ScheduleGrid({ unitId, disabled = false }) {
           unitId,
           selectedDay,
           selectedTime,
-          className.trim() || null,
+          modality,
+          classType,
         );
         await loadSchedule();
         closeModal();
@@ -157,7 +181,8 @@ export function ScheduleGrid({ unitId, disabled = false }) {
                   </td>
                   {DAYS_OF_WEEK.map((day) => {
                     const slot = getSlot(day.value, time);
-                    const isEmpty = !slot || !slot.className;
+                    const isEmpty = !slot || !slot.modality;
+                    const displayName = slot ? formatClassName(slot.modality, slot.classType) : null;
                     return (
                       <td
                         key={`${day.value}-${time}`}
@@ -175,7 +200,7 @@ export function ScheduleGrid({ unitId, disabled = false }) {
                             Clique para adicionar
                           </span>
                         ) : (
-                          <span className="font-medium">{slot.className}</span>
+                          <span className="font-medium">{displayName}</span>
                         )}
                       </td>
                     );
@@ -198,18 +223,43 @@ export function ScheduleGrid({ unitId, disabled = false }) {
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="slotClassName">Nome da aula</Label>
-              <Input
-                id="slotClassName"
-                value={className}
-                onChange={(e) => setClassName(e.target.value)}
-                placeholder="Ex: FUNCIONAL, KIDS, 18H + KIDS"
+              <Label htmlFor="slotModality">Modalidade</Label>
+              <Select
+                value={modality}
+                onValueChange={setModality}
                 disabled={isPending}
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleSave();
-                }}
-              />
+              >
+                <SelectTrigger id="slotModality" className="h-11 rounded-xl">
+                  <SelectValue placeholder="Selecione a modalidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MODALITIES.map((m) => (
+                    <SelectItem key={m.value} value={m.value}>
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="slotClassType">Tipo</Label>
+              <Select
+                value={classType}
+                onValueChange={setClassType}
+                disabled={isPending}
+              >
+                <SelectTrigger id="slotClassType" className="h-11 rounded-xl">
+                  <SelectValue placeholder="Selecione o tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CLASS_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="text-sm text-muted-foreground">
@@ -243,7 +293,7 @@ export function ScheduleGrid({ unitId, disabled = false }) {
             <Button
               type="button"
               onClick={handleSave}
-              disabled={isPending}
+              disabled={isPending || !modality}
             >
               Salvar
             </Button>

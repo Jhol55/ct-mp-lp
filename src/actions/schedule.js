@@ -6,10 +6,10 @@ export async function getSchedule(unitId) {
   return await fetchBackend(`/units/${unitId}/schedule`, { method: "GET" });
 }
 
-export async function upsertScheduleSlot(unitId, dayOfWeek, time, className) {
+export async function upsertScheduleSlot(unitId, dayOfWeek, time, modality, classType) {
   return await fetchBackend(`/units/${unitId}/schedule/slots`, {
     method: "POST",
-    body: JSON.stringify({ dayOfWeek, time, className }),
+    body: JSON.stringify({ dayOfWeek, time, modality, classType }),
   });
 }
 
@@ -25,4 +25,17 @@ export async function bulkUpdateScheduleSlots(unitId, slots) {
     method: "PUT",
     body: JSON.stringify({ slots }),
   });
+}
+
+// Helper para gerar nome da aula a partir de modality e classType
+export function formatClassName(modality, classType) {
+  if (!modality) return null;
+  
+  const modalityLabel = modality === "MUAY_THAI" ? "Muay Thai" : "Funcional";
+  const typeLabel = classType === "KIDS" ? "Kids" : null;
+  
+  if (typeLabel) {
+    return `${modalityLabel} - ${typeLabel}`;
+  }
+  return modalityLabel;
 }
