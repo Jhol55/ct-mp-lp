@@ -36,7 +36,7 @@ export class ScheduleService {
     }
 
     const modalityStr = modality && ['MUAY_THAI', 'FUNCIONAL'].includes(modality) ? modality : null;
-    const classTypeStr = classType && ['LIVRE', 'KIDS'].includes(classType) ? classType : 'LIVRE';
+    const classTypeStr = classType && ['ADULTOS', 'KIDS', 'LIVRE'].includes(classType) ? classType : 'LIVRE';
     
     const duration = durationMinutes !== undefined && durationMinutes !== null 
       ? Number(durationMinutes) 

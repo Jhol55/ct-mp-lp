@@ -23,8 +23,9 @@ enum Modality {
 }
 
 enum ClassType {
-  LIVRE
+  ADULTOS
   KIDS
+  LIVRE
 }
 
 model User {
