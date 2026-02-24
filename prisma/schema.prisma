@@ -53,8 +53,9 @@ model Unit {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  plans         Plan[]
-  scheduleSlots ScheduleSlot[]
+  plans              Plan[]
+  scheduleSlots      ScheduleSlot[]
+  scheduleVisibility ScheduleVisibility?
 
   @@map("units")
 }
@@ -109,4 +110,16 @@ model ScheduleSlot {
   @@index([unitId])
   @@index([unitId, dayOfWeek])
   @@map("schedule_slots")
+}
+
+model ScheduleVisibility {
+  id             String   @id @default(uuid())
+  unitId         String   @unique
+  hiddenTimeSlots String[] @default([]) // array de horários escondidos, formato "HH:MM"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@map("schedule_visibility")
 }

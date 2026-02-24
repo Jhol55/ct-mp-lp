@@ -101,4 +101,46 @@ export class ScheduleService {
       ),
     );
   }
+
+  async getVisibility(unitId) {
+    let visibility = await this.prisma.scheduleVisibility.findUnique({
+      where: { unitId },
+    });
+
+    if (!visibility) {
+      // Criar configuração vazia se não existir
+      visibility = await this.prisma.scheduleVisibility.create({
+        data: {
+          unitId,
+          hiddenTimeSlots: [],
+        },
+      });
+    }
+
+    return visibility;
+  }
+
+  async updateVisibility(unitId, hiddenTimeSlots) {
+    if (!Array.isArray(hiddenTimeSlots)) {
+      throw new BadRequestException('hiddenTimeSlots must be an array');
+    }
+
+    // Validar formato dos horários
+    for (const time of hiddenTimeSlots) {
+      if (typeof time !== 'string' || !/^\d{2}:\d{2}$/.test(time)) {
+        throw new BadRequestException(`Invalid time format: ${time}. Expected "HH:MM"`);
+      }
+    }
+
+    return this.prisma.scheduleVisibility.upsert({
+      where: { unitId },
+      update: {
+        hiddenTimeSlots,
+      },
+      create: {
+        unitId,
+        hiddenTimeSlots,
+      },
+    });
+  }
 }

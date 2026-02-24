@@ -49,4 +49,15 @@ export class ScheduleController {
     const { slots } = body;
     return this.schedule.bulkUpdateSlots(unitId, slots);
   }
+
+  @Get('visibility')
+  async getVisibility(@Param('unitId') unitId) {
+    return this.schedule.getVisibility(unitId);
+  }
+
+  @Put('visibility')
+  async updateVisibility(@Param('unitId') unitId, @Body() body) {
+    const { hiddenTimeSlots } = body;
+    return this.schedule.updateVisibility(unitId, hiddenTimeSlots);
+  }
 }
