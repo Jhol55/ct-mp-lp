@@ -98,5 +98,50 @@ export class UnitsService {
       include: { prices: true },
     });
   }
+
+  async updatePlan(planId, payload) {
+    const existing = await this.prisma.plan.findUnique({ where: { id: planId } });
+    if (!existing) throw new NotFoundException('Plan not found');
+
+    const data = {};
+    if (payload?.name !== undefined) {
+      const name = String(payload.name).trim();
+      if (!name) throw new BadRequestException('Plan name is required');
+      data.name = name;
+    }
+    if (payload?.frequencyLabel !== undefined) {
+      const freq = String(payload.frequencyLabel).trim();
+      if (!freq) throw new BadRequestException('frequencyLabel is required');
+      data.frequencyLabel = freq;
+    }
+
+    // If prices are provided, replace all existing prices
+    if (Array.isArray(payload?.prices)) {
+      const newPrices = payload.prices
+        .filter((p) => p && p.model && Number.isFinite(Number(p.priceCents)))
+        .map((p) => ({
+          model: p.model,
+          priceCents: Number(p.priceCents),
+        }));
+
+      return this.prisma.$transaction(async (tx) => {
+        await tx.planPrice.deleteMany({ where: { planId } });
+        return tx.plan.update({
+          where: { id: planId },
+          data: {
+            ...data,
+            prices: newPrices.length ? { create: newPrices } : undefined,
+          },
+          include: { prices: true },
+        });
+      });
+    }
+
+    return this.prisma.plan.update({
+      where: { id: planId },
+      data,
+      include: { prices: true },
+    });
+  }
 }
 

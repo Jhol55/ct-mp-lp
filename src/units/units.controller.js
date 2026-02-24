@@ -43,5 +43,10 @@ export class UnitsController {
   async createPlan(@Param('id') id, @Body() body) {
     return this.units.createPlan(id, body);
   }
+
+  @Patch(':id/plans/:planId')
+  async patchPlan(@Param('planId') planId, @Body() body) {
+    return this.units.updatePlan(planId, body);
+  }
 }
 
