@@ -16,6 +16,7 @@ function formatClassName(modality, classType) {
   return modalityLabel;
 }
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -77,6 +78,7 @@ export function ScheduleGrid({ unitId, disabled = false }) {
   const [selectedTime, setSelectedTime] = useState(null);
   const [modality, setModality] = useState("");
   const [classType, setClassType] = useState("LIVRE");
+  const [durationMinutes, setDurationMinutes] = useState(60);
 
   async function loadSchedule() {
     if (!unitId) return;
@@ -107,6 +109,7 @@ export function ScheduleGrid({ unitId, disabled = false }) {
     setSelectedTime(time);
     setModality(slot?.modality || "");
     setClassType(slot?.classType || "LIVRE");
+    setDurationMinutes(slot?.durationMinutes || 60);
     setModalOpen(true);
   }
 
@@ -116,6 +119,7 @@ export function ScheduleGrid({ unitId, disabled = false }) {
     setSelectedTime(null);
     setModality("");
     setClassType("LIVRE");
+    setDurationMinutes(60);
   }
 
   async function handleSave() {
@@ -134,6 +138,7 @@ export function ScheduleGrid({ unitId, disabled = false }) {
           selectedTime,
           modality,
           classType,
+          durationMinutes,
         );
         await loadSchedule();
         closeModal();
@@ -273,6 +278,25 @@ export function ScheduleGrid({ unitId, disabled = false }) {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="slotDuration">Duração da aula (minutos)</Label>
+              <Input
+                id="slotDuration"
+                type="number"
+                min="1"
+                value={durationMinutes}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  if (value > 0) {
+                    setDurationMinutes(value);
+                  }
+                }}
+                placeholder="60"
+                disabled={isPending}
+                className="h-11 rounded-xl"
+              />
             </div>
 
             <div className="text-sm text-muted-foreground">

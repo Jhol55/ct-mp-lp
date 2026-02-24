@@ -6,10 +6,10 @@ export async function getSchedule(unitId) {
   return await fetchBackend(`/units/${unitId}/schedule`, { method: "GET" });
 }
 
-export async function upsertScheduleSlot(unitId, dayOfWeek, time, modality, classType) {
+export async function upsertScheduleSlot(unitId, dayOfWeek, time, modality, classType, durationMinutes) {
   return await fetchBackend(`/units/${unitId}/schedule/slots`, {
     method: "POST",
-    body: JSON.stringify({ dayOfWeek, time, modality, classType }),
+    body: JSON.stringify({ dayOfWeek, time, modality, classType, durationMinutes }),
   });
 }
 
