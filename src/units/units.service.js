@@ -55,6 +55,18 @@ export class UnitsService {
       data.plansImageUrl = patch.plansImageUrl ? String(patch.plansImageUrl) : null;
     if (patch?.plansImageKey !== undefined)
       data.plansImageKey = patch.plansImageKey ? String(patch.plansImageKey) : null;
+    if (patch?.address !== undefined)
+      data.address = patch.address ? String(patch.address).trim() : null;
+    if (patch?.addressNumber !== undefined)
+      data.addressNumber = patch.addressNumber ? String(patch.addressNumber).trim() : null;
+    if (patch?.neighborhood !== undefined)
+      data.neighborhood = patch.neighborhood ? String(patch.neighborhood).trim() : null;
+    if (patch?.city !== undefined)
+      data.city = patch.city ? String(patch.city).trim() : null;
+    if (patch?.state !== undefined)
+      data.state = patch.state ? String(patch.state).trim() : null;
+    if (patch?.zipCode !== undefined)
+      data.zipCode = patch.zipCode ? String(patch.zipCode).trim() : null;
 
     // Delete old image from MinIO when a new one is being set
     if (patch?.plansImageKey) {

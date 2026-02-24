@@ -29,12 +29,18 @@ model User {
 }
 
 model Unit {
-  id            String   @id @default(uuid())
-  name          String
-  plansImageUrl String?
-  plansImageKey String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             String   @id @default(uuid())
+  name           String
+  plansImageUrl  String?
+  plansImageKey  String?
+  address        String?
+  addressNumber  String?
+  neighborhood   String?
+  city           String?
+  state          String?
+  zipCode        String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   plans Plan[]
 
