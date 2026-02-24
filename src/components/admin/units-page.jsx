@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
+import { Upload } from "lucide-react";
 import { createPlan } from "@/actions/plans";
 import { createUnit, getUnit, listUnits, updateUnit } from "@/actions/units";
 import { presignUpload } from "@/actions/uploads";
@@ -37,6 +38,7 @@ export function UnitsPage() {
   const [error, setError] = useState("");
 
   const [isPending, startTransition] = useTransition();
+  const fileInputRef = useRef(null);
 
   // Modal: new unit
   const [unitModalOpen, setUnitModalOpen] = useState(false);
@@ -249,36 +251,54 @@ export function UnitsPage() {
         {/* ── Plans image upload ── */}
         <Card>
           <CardHeader>
-            <CardTitle>Foto dos planos</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+            <CardTitle>Imagem dos Planos</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Faça upload da imagem que contém todos os planos
+              Faça upload da imagem contendo todos os planos disponíveis
             </p>
+          </CardHeader>
+          <CardContent>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleUploadPlansImage(e.target.files?.[0])}
+              disabled={!selectedUnitId || isPending}
+              className="hidden"
+            />
 
-            <div className="rounded-xl border border-dashed p-6 text-center">
-              <Label htmlFor="plansImage">Escolher arquivo</Label>
-              <Input
-                id="plansImage"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleUploadPlansImage(e.target.files?.[0])}
-                disabled={!selectedUnitId || isPending}
-                className="mt-2"
-              />
-            </div>
-
-            {selectedUnit?.plansImageUrl ? (
-              <div className="flex max-h-80 items-center justify-center overflow-hidden rounded-xl border">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={!selectedUnitId || isPending}
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const file = e.dataTransfer.files?.[0];
+                if (file) handleUploadPlansImage(file);
+              }}
+              className="flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {selectedUnit?.plansImageUrl ? (
                 <Image
                   src={`/api/image?url=${encodeURIComponent(selectedUnit.plansImageUrl)}`}
-                  alt="Foto dos planos"
-                  width={800}
-                  height={400}
-                  className="h-auto max-h-80 w-auto object-contain"
+                  alt="Imagem dos planos"
+                  width={600}
+                  height={300}
+                  className="max-h-64 w-auto rounded-lg object-contain"
                 />
-              </div>
-            ) : null}
+              ) : (
+                <>
+                  <Upload className="mb-2 size-8 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">
+                    Arraste uma imagem aqui ou
+                  </span>
+                  <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
+                    Selecionar Arquivo
+                  </span>
+                </>
+              )}
+            </button>
           </CardContent>
         </Card>
 
