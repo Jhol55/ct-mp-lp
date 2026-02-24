@@ -105,8 +105,21 @@ export function ScheduleGrid({ unitId, disabled = false }) {
     }
   }
 
+  async function loadVisibility() {
+    if (!unitId) return;
+    try {
+      const data = await getScheduleVisibility(unitId);
+      const hidden = Array.isArray(data?.hiddenTimeSlots) ? data.hiddenTimeSlots : [];
+      setHiddenTimeSlots(hidden);
+      setError("");
+    } catch (e) {
+      setError(String(e?.message || e));
+    }
+  }
+
   useEffect(() => {
     loadSchedule();
+    loadVisibility();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [unitId]);
 
@@ -222,7 +235,7 @@ export function ScheduleGrid({ unitId, disabled = false }) {
               </tr>
             </thead>
             <tbody>
-              {TIME_SLOTS.map((time) => (
+              {TIME_SLOTS.filter((time) => !hiddenTimeSlots.includes(time)).map((time) => (
                 <tr key={time}>
                   <td className="border border-muted bg-muted/30 px-3 py-2 text-sm font-medium">
                     {time}
@@ -428,7 +441,7 @@ export function ScheduleGrid({ unitId, disabled = false }) {
                   try {
                     setError("");
                     await updateScheduleVisibility(unitId, tempHiddenTimeSlots);
-                    setHiddenTimeSlots(tempHiddenTimeSlots);
+                    setHiddenTimeSlots([...tempHiddenTimeSlots]);
                     setVisibilityModalOpen(false);
                   } catch (e) {
                     setError(String(e?.message || e));
