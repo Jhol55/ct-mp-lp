@@ -28,6 +28,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const BILLING_MODELS = [
   { value: "MONTHLY", label: "Mensal" },
@@ -425,210 +426,223 @@ export function UnitsPage() {
           Gerencie planos e valores desta unidade
         </div>
 
-        {/* ── Plans image upload and address ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* ── Left: Address ── */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Endereço</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Preencha o endereço da unidade
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="address">Endereço</Label>
-                <Input
-                  id="address"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Ex: Rua das Flores"
+        {/* ── Tabs ── */}
+        <Tabs defaultValue="planos" className="w-full">
+          <TabsList>
+            <TabsTrigger value="planos">Planos</TabsTrigger>
+            <TabsTrigger value="endereco">Endereço</TabsTrigger>
+            <TabsTrigger value="horarios">Horários</TabsTrigger>
+          </TabsList>
+
+          {/* ── Tab: Planos ── */}
+          <TabsContent value="planos" className="space-y-6 mt-6">
+            {/* ── Plans image upload ── */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Imagem dos Planos</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Faça upload da imagem contendo todos os planos disponíveis
+                </p>
+              </CardHeader>
+              <CardContent>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleUploadPlansImage(e.target.files?.[0])}
                   disabled={!selectedUnitId || isPending}
-                  onBlur={handleSaveAddress}
+                  className="hidden"
                 />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="addressNumber">Número</Label>
-                  <Input
-                    id="addressNumber"
-                    value={addressNumber}
-                    onChange={(e) => setAddressNumber(e.target.value)}
-                    placeholder="Ex: 123"
-                    disabled={!selectedUnitId || isPending}
-                    onBlur={handleSaveAddress}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="zipCode">CEP</Label>
-                  <Input
-                    id="zipCode"
-                    value={zipCode}
-                    onChange={(e) => setZipCode(e.target.value)}
-                    placeholder="Ex: 12345-678"
-                    disabled={!selectedUnitId || isPending}
-                    onBlur={handleSaveAddress}
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="neighborhood">Bairro</Label>
-                <Input
-                  id="neighborhood"
-                  value={neighborhood}
-                  onChange={(e) => setNeighborhood(e.target.value)}
-                  placeholder="Ex: Centro"
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
                   disabled={!selectedUnitId || isPending}
-                  onBlur={handleSaveAddress}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label htmlFor="city">Cidade</Label>
-                  <Input
-                    id="city"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder="Ex: São Paulo"
-                    disabled={!selectedUnitId || isPending}
-                    onBlur={handleSaveAddress}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="state">Estado</Label>
-                  <Input
-                    id="state"
-                    value={state}
-                    onChange={(e) => setState(e.target.value)}
-                    placeholder="Ex: SP"
-                    disabled={!selectedUnitId || isPending}
-                    onBlur={handleSaveAddress}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) handleUploadPlansImage(file);
+                  }}
+                  className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {selectedUnit?.plansImageUrl ? (
+                    <Image
+                      src={`/api/image?url=${encodeURIComponent(selectedUnit.plansImageUrl)}`}
+                      alt="Imagem dos planos"
+                      width={600}
+                      height={300}
+                      className="max-h-64 w-auto rounded-lg object-contain"
+                    />
+                  ) : (
+                    <>
+                      <Upload className="mb-2 size-8 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        Arraste uma imagem aqui ou
+                      </span>
+                      <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
+                        Selecionar Arquivo
+                      </span>
+                    </>
+                  )}
+                </button>
+              </CardContent>
+            </Card>
 
-          {/* ── Right: Image upload ── */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Imagem dos Planos</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Faça upload da imagem contendo todos os planos disponíveis
-              </p>
-            </CardHeader>
-            <CardContent>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleUploadPlansImage(e.target.files?.[0])}
-                disabled={!selectedUnitId || isPending}
-                className="hidden"
-              />
-
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={!selectedUnitId || isPending}
-                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const file = e.dataTransfer.files?.[0];
-                  if (file) handleUploadPlansImage(file);
-                }}
-                className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {selectedUnit?.plansImageUrl ? (
-                  <Image
-                    src={`/api/image?url=${encodeURIComponent(selectedUnit.plansImageUrl)}`}
-                    alt="Imagem dos planos"
-                    width={600}
-                    height={300}
-                    className="max-h-64 w-auto rounded-lg object-contain"
-                  />
-                ) : (
-                  <>
-                    <Upload className="mb-2 size-8 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      Arraste uma imagem aqui ou
-                    </span>
-                    <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
-                      Selecionar Arquivo
-                    </span>
-                  </>
-                )}
-              </button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* ── Plans list ── */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Planos</CardTitle>
-            <Button
-              variant="outline"
-              onClick={() => setPlanModalOpen(true)}
-              disabled={!selectedUnitId || isPending}
-            >
-              + Adicionar plano
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {selectedUnit?.plans?.length ? (
-              selectedUnit.plans.map((p) => (
-                <div key={p.id} className="rounded-xl border p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="font-medium">{p.name}</div>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => openEditPlanModal(p)}
-                      title="Editar plano"
-                    >
-                      <Pencil className="size-4" />
-                    </Button>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    Frequência: {p.frequencyLabel}
-                  </div>
-                  <div className="mt-2 space-y-1 text-sm">
-                    {p.prices?.map((pr) => (
-                      <div key={pr.id} className="flex justify-between">
-                        <span>
-                          {BILLING_MODELS.find((m) => m.value === pr.model)?.label ??
-                            pr.model}
-                        </span>
-                        <span className="font-medium">
-                          {formatMoneyBRLFromCents(pr.priceCents)}
-                        </span>
+            {/* ── Plans list ── */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Planos</CardTitle>
+                <Button
+                  variant="outline"
+                  onClick={() => setPlanModalOpen(true)}
+                  disabled={!selectedUnitId || isPending}
+                >
+                  + Adicionar plano
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {selectedUnit?.plans?.length ? (
+                  selectedUnit.plans.map((p) => (
+                    <div key={p.id} className="rounded-xl border p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium">{p.name}</div>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => openEditPlanModal(p)}
+                          title="Editar plano"
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
                       </div>
-                    ))}
+                      <div className="text-sm text-muted-foreground">
+                        Frequência: {p.frequencyLabel}
+                      </div>
+                      <div className="mt-2 space-y-1 text-sm">
+                        {p.prices?.map((pr) => (
+                          <div key={pr.id} className="flex justify-between">
+                            <span>
+                              {BILLING_MODELS.find((m) => m.value === pr.model)?.label ??
+                                pr.model}
+                            </span>
+                            <span className="font-medium">
+                              {formatMoneyBRLFromCents(pr.priceCents)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    Nenhum plano ainda.
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ── Tab: Endereço ── */}
+          <TabsContent value="endereco" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Endereço</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Preencha o endereço da unidade
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="address">Endereço</Label>
+                  <Input
+                    id="address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Ex: Rua das Flores"
+                    disabled={!selectedUnitId || isPending}
+                    onBlur={handleSaveAddress}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="addressNumber">Número</Label>
+                    <Input
+                      id="addressNumber"
+                      value={addressNumber}
+                      onChange={(e) => setAddressNumber(e.target.value)}
+                      placeholder="Ex: 123"
+                      disabled={!selectedUnitId || isPending}
+                      onBlur={handleSaveAddress}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="zipCode">CEP</Label>
+                    <Input
+                      id="zipCode"
+                      value={zipCode}
+                      onChange={(e) => setZipCode(e.target.value)}
+                      placeholder="Ex: 12345-678"
+                      disabled={!selectedUnitId || isPending}
+                      onBlur={handleSaveAddress}
+                    />
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-sm text-muted-foreground">
-                Nenhum plano ainda.
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="neighborhood">Bairro</Label>
+                  <Input
+                    id="neighborhood"
+                    value={neighborhood}
+                    onChange={(e) => setNeighborhood(e.target.value)}
+                    placeholder="Ex: Centro"
+                    disabled={!selectedUnitId || isPending}
+                    onBlur={handleSaveAddress}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="city">Cidade</Label>
+                    <Input
+                      id="city"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="Ex: São Paulo"
+                      disabled={!selectedUnitId || isPending}
+                      onBlur={handleSaveAddress}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="state">Estado</Label>
+                    <Input
+                      id="state"
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      placeholder="Ex: SP"
+                      disabled={!selectedUnitId || isPending}
+                      onBlur={handleSaveAddress}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        {/* ── Schedule Grid ── */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Grade de Horários</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Clique nas células para adicionar ou editar horários das aulas
-            </p>
-          </CardHeader>
-          <CardContent>
-            <ScheduleGrid unitId={selectedUnitId} disabled={!selectedUnitId || isPending} />
-          </CardContent>
-        </Card>
+          {/* ── Tab: Horários ── */}
+          <TabsContent value="horarios" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Grade de Horários</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Clique nas células para adicionar ou editar horários das aulas
+                </p>
+              </CardHeader>
+              <CardContent>
+                <ScheduleGrid unitId={selectedUnitId} disabled={!selectedUnitId || isPending} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* ══════ Modal: Nova unidade ══════ */}
