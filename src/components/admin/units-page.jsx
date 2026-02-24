@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { Upload } from "lucide-react";
-import { createPlan } from "@/actions/plans";
+import { Pencil, Upload } from "lucide-react";
+import { createPlan, updatePlan } from "@/actions/plans";
 import { createUnit, getUnit, listUnits, updateUnit } from "@/actions/units";
 import { presignUpload } from "@/actions/uploads";
 import { Button } from "@/components/ui/button";
@@ -44,11 +44,22 @@ export function UnitsPage() {
   const [unitModalOpen, setUnitModalOpen] = useState(false);
   const [newUnitName, setNewUnitName] = useState("");
 
+  // Modal: edit unit name
+  const [editUnitModalOpen, setEditUnitModalOpen] = useState(false);
+  const [editUnitName, setEditUnitName] = useState("");
+
   // Modal: new plan
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [planName, setPlanName] = useState("");
   const [frequencyLabel, setFrequencyLabel] = useState("");
   const [priceRows, setPriceRows] = useState([{ model: "MONTHLY", price: "" }]);
+
+  // Modal: edit plan
+  const [editPlanModalOpen, setEditPlanModalOpen] = useState(false);
+  const [editPlanId, setEditPlanId] = useState(null);
+  const [editPlanName, setEditPlanName] = useState("");
+  const [editFrequencyLabel, setEditFrequencyLabel] = useState("");
+  const [editPriceRows, setEditPriceRows] = useState([]);
 
   const canSubmitPlan = useMemo(() => {
     return (
@@ -189,6 +200,89 @@ export function UnitsPage() {
     });
   }
 
+  function openEditUnitModal() {
+    setEditUnitName(selectedUnit?.name || "");
+    setEditUnitModalOpen(true);
+  }
+
+  async function handleEditUnitName() {
+    const name = editUnitName.trim();
+    if (!name || !selectedUnitId) return;
+
+    startTransition(async () => {
+      try {
+        setError("");
+        await updateUnit(selectedUnitId, { name });
+        setEditUnitModalOpen(false);
+        await refreshUnits();
+        await refreshSelectedUnit(selectedUnitId);
+      } catch (e) {
+        setError(String(e?.message || e));
+      }
+    });
+  }
+
+  function openEditPlanModal(plan) {
+    setEditPlanId(plan.id);
+    setEditPlanName(plan.name);
+    setEditFrequencyLabel(plan.frequencyLabel);
+    setEditPriceRows(
+      plan.prices?.length
+        ? plan.prices.map((pr) => ({
+            model: pr.model,
+            price: String((pr.priceCents / 100).toFixed(2)).replace(".", ","),
+          }))
+        : [{ model: "MONTHLY", price: "" }],
+    );
+    setEditPlanModalOpen(true);
+  }
+
+  function addEditPriceRow() {
+    setEditPriceRows((rows) => [...rows, { model: "SEMIANNUAL", price: "" }]);
+  }
+
+  function removeEditPriceRow(idx) {
+    setEditPriceRows((rows) => rows.filter((_, i) => i !== idx));
+  }
+
+  async function handleEditPlan(e) {
+    e.preventDefault();
+    if (!selectedUnitId || !editPlanId) return;
+
+    startTransition(async () => {
+      try {
+        setError("");
+        const prices = editPriceRows
+          .map((r) => ({
+            model: r.model,
+            priceCents: Math.round(
+              Number(String(r.price).replace(",", ".")) * 100,
+            ),
+          }))
+          .filter((p) => p.model && Number.isFinite(p.priceCents) && p.priceCents > 0);
+
+        await updatePlan(selectedUnitId, editPlanId, {
+          name: editPlanName.trim(),
+          frequencyLabel: editFrequencyLabel.trim(),
+          prices,
+        });
+
+        setEditPlanModalOpen(false);
+        await refreshSelectedUnit(selectedUnitId);
+      } catch (e2) {
+        setError(String(e2?.message || e2));
+      }
+    });
+  }
+
+  const canSubmitEditPlan = useMemo(() => {
+    return (
+      editPlanId &&
+      editPlanName.trim().length > 0 &&
+      editFrequencyLabel.trim().length > 0
+    );
+  }, [editPlanId, editPlanName, editFrequencyLabel]);
+
   return (
     <div className="flex min-h-[calc(100vh-64px)] gap-6">
       {/* ── Sidebar: units list ── */}
@@ -241,8 +335,20 @@ export function UnitsPage() {
           </Alert>
         ) : null}
 
-        <div className="text-3xl font-semibold">
-          {selectedUnit?.name || "Selecione uma unidade"}
+        <div className="flex items-center gap-3">
+          <div className="text-3xl font-semibold">
+            {selectedUnit?.name || "Selecione uma unidade"}
+          </div>
+          {selectedUnit ? (
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={openEditUnitModal}
+              title="Editar nome da unidade"
+            >
+              <Pencil className="size-4" />
+            </Button>
+          ) : null}
         </div>
         <div className="text-sm text-muted-foreground">
           Gerencie planos e valores desta unidade
@@ -318,7 +424,17 @@ export function UnitsPage() {
             {selectedUnit?.plans?.length ? (
               selectedUnit.plans.map((p) => (
                 <div key={p.id} className="rounded-xl border p-4">
-                  <div className="font-medium">{p.name}</div>
+                  <div className="flex items-center justify-between">
+                    <div className="font-medium">{p.name}</div>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => openEditPlanModal(p)}
+                      title="Editar plano"
+                    >
+                      <Pencil className="size-4" />
+                    </Button>
+                  </div>
                   <div className="text-sm text-muted-foreground">
                     Frequência: {p.frequencyLabel}
                   </div>
@@ -506,6 +622,164 @@ export function UnitsPage() {
               </Button>
               <Button type="submit" disabled={!canSubmitPlan || isPending}>
                 Adicionar plano
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ══════ Modal: Editar nome da unidade ══════ */}
+      <Dialog open={editUnitModalOpen} onOpenChange={setEditUnitModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar unidade</DialogTitle>
+            <DialogDescription>
+              Altere o nome da unidade
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            <Label htmlFor="editUnitName">Nome da unidade</Label>
+            <Input
+              id="editUnitName"
+              value={editUnitName}
+              onChange={(e) => setEditUnitName(e.target.value)}
+              placeholder="Ex: Academia Centro"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleEditUnitName();
+              }}
+              autoFocus
+            />
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditUnitModalOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleEditUnitName}
+              disabled={isPending || !editUnitName.trim()}
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ══════ Modal: Editar plano ══════ */}
+      <Dialog open={editPlanModalOpen} onOpenChange={setEditPlanModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar plano</DialogTitle>
+            <DialogDescription>
+              Altere os dados do plano
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleEditPlan} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="editPlanName">Nome do plano</Label>
+              <Input
+                id="editPlanName"
+                value={editPlanName}
+                onChange={(e) => setEditPlanName(e.target.value)}
+                placeholder="Ex: Basic"
+                disabled={isPending}
+                autoFocus
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="editFrequencyLabel">Frequência</Label>
+              <Input
+                id="editFrequencyLabel"
+                value={editFrequencyLabel}
+                onChange={(e) => setEditFrequencyLabel(e.target.value)}
+                placeholder="Ex: 4 a 5x semana"
+                disabled={isPending}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-medium">Modelos de pagamento</div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addEditPriceRow}
+                disabled={isPending}
+              >
+                + Adicionar modelo
+              </Button>
+            </div>
+
+            <div className="space-y-3">
+              {editPriceRows.map((row, idx) => (
+                <div key={idx} className="grid grid-cols-12 gap-3">
+                  <div className="col-span-6">
+                    <Label>Modelo</Label>
+                    <select
+                      value={row.model}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setEditPriceRows((rows) =>
+                          rows.map((r, i) => (i === idx ? { ...r, model: v } : r)),
+                        );
+                      }}
+                      disabled={isPending}
+                      className="mt-2 flex h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
+                    >
+                      {BILLING_MODELS.map((m) => (
+                        <option key={m.value} value={m.value}>
+                          {m.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-span-5">
+                    <Label>Valor (R$)</Label>
+                    <Input
+                      value={row.price}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setEditPriceRows((rows) =>
+                          rows.map((r, i) => (i === idx ? { ...r, price: v } : r)),
+                        );
+                      }}
+                      placeholder="Ex: 99,90"
+                      disabled={isPending}
+                      className="mt-2"
+                    />
+                  </div>
+                  <div className="col-span-1 flex items-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeEditPriceRow(idx)}
+                      disabled={isPending || editPriceRows.length <= 1}
+                      title="Remover"
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditPlanModalOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={!canSubmitEditPlan || isPending}>
+                Salvar plano
               </Button>
             </DialogFooter>
           </form>

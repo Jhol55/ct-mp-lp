@@ -9,3 +9,9 @@ export async function createPlan(unitId, payload) {
   });
 }
 
+export async function updatePlan(unitId, planId, payload) {
+  return await fetchBackend(`/units/${unitId}/plans/${planId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
