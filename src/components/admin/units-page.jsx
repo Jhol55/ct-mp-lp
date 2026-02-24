@@ -33,6 +33,11 @@ const BILLING_MODELS = [
   { value: "ANNUAL", label: "Anual" },
 ];
 
+const FREQUENCY_OPTIONS = [
+  { value: "2 a 3x por semana", label: "2 a 3x por semana" },
+  { value: "4 a 5x por semana", label: "4 a 5x por semana" },
+];
+
 function formatMoneyBRLFromCents(cents) {
   const n = Number(cents || 0) / 100;
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -538,13 +543,22 @@ export function UnitsPage() {
 
             <div className="space-y-2">
               <Label htmlFor="modalFrequencyLabel">Frequência</Label>
-              <Input
-                id="modalFrequencyLabel"
+              <Select
                 value={frequencyLabel}
-                onChange={(e) => setFrequencyLabel(e.target.value)}
-                placeholder="Ex: 4 a 5x semana"
+                onValueChange={setFrequencyLabel}
                 disabled={isPending}
-              />
+              >
+                <SelectTrigger id="modalFrequencyLabel" className="h-11 rounded-xl">
+                  <SelectValue placeholder="Selecione a frequência" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FREQUENCY_OPTIONS.map((freq) => (
+                    <SelectItem key={freq.value} value={freq.value}>
+                      {freq.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center justify-between">
@@ -705,13 +719,22 @@ export function UnitsPage() {
 
             <div className="space-y-2">
               <Label htmlFor="editFrequencyLabel">Frequência</Label>
-              <Input
-                id="editFrequencyLabel"
+              <Select
                 value={editFrequencyLabel}
-                onChange={(e) => setEditFrequencyLabel(e.target.value)}
-                placeholder="Ex: 4 a 5x semana"
+                onValueChange={setEditFrequencyLabel}
                 disabled={isPending}
-              />
+              >
+                <SelectTrigger id="editFrequencyLabel" className="h-11 rounded-xl">
+                  <SelectValue placeholder="Selecione a frequência" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FREQUENCY_OPTIONS.map((freq) => (
+                    <SelectItem key={freq.value} value={freq.value}>
+                      {freq.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center justify-between">
