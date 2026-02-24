@@ -17,6 +17,16 @@ enum BillingModel {
   ANNUAL
 }
 
+enum Modality {
+  MUAY_THAI
+  FUNCIONAL
+}
+
+enum ClassType {
+  LIVRE
+  KIDS
+}
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
@@ -82,13 +92,14 @@ model PlanPrice {
 }
 
 model ScheduleSlot {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   unitId    String
-  dayOfWeek Int      // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sáb
-  time      String   // formato "HH:MM", ex: "05:00", "18:30"
-  className String?  // nome da aula, ex: "FUNCIONAL", "KIDS", "18H + KIDS"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  dayOfWeek Int       // 0=Dom, 1=Seg, 2=Ter, 3=Qua, 4=Qui, 5=Sex, 6=Sáb
+  time      String    // formato "HH:MM", ex: "05:00", "18:30"
+  modality  Modality? // modalidade: MUAY_THAI ou FUNCIONAL
+  classType ClassType @default(LIVRE) // tipo: LIVRE ou KIDS
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   unit Unit @relation(fields: [unitId], references: [id], onDelete: Cascade)
 

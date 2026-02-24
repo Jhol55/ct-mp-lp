@@ -21,7 +21,7 @@ export class ScheduleService {
     return slots;
   }
 
-  async upsertSlot(unitId, dayOfWeek, time, className) {
+  async upsertSlot(unitId, dayOfWeek, time, modality, classType) {
     const day = Number(dayOfWeek);
     const timeStr = String(time).trim();
 
@@ -35,7 +35,8 @@ export class ScheduleService {
       throw new BadRequestException('time must be in format "HH:MM"');
     }
 
-    const classNameStr = className ? String(className).trim() : null;
+    const modalityStr = modality && ['MUAY_THAI', 'FUNCIONAL'].includes(modality) ? modality : null;
+    const classTypeStr = classType && ['LIVRE', 'KIDS'].includes(classType) ? classType : 'LIVRE';
 
     return this.prisma.scheduleSlot.upsert({
       where: {
@@ -46,13 +47,15 @@ export class ScheduleService {
         },
       },
       update: {
-        className: classNameStr || null,
+        modality: modalityStr,
+        classType: classTypeStr,
       },
       create: {
         unitId,
         dayOfWeek: day,
         time: timeStr,
-        className: classNameStr || null,
+        modality: modalityStr,
+        classType: classTypeStr,
       },
     });
   }
@@ -84,7 +87,7 @@ export class ScheduleService {
 
     return this.prisma.$transaction(
       slots.map((slot) =>
-        this.upsertSlot(unitId, slot.dayOfWeek, slot.time, slot.className),
+        this.upsertSlot(unitId, slot.dayOfWeek, slot.time, slot.modality, slot.classType),
       ),
     );
   }
