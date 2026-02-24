@@ -6,6 +6,7 @@ import { Pencil, Upload } from "lucide-react";
 import { createPlan, updatePlan } from "@/actions/plans";
 import { createUnit, getUnit, listUnits, updateUnit } from "@/actions/units";
 import { presignUpload } from "@/actions/uploads";
+import { ScheduleGrid } from "@/components/admin/schedule-grid";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -613,6 +614,19 @@ export function UnitsPage() {
                 Nenhum plano ainda.
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* ── Schedule Grid ── */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Grade de Horários</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Clique nas células para adicionar ou editar horários das aulas
+            </p>
+          </CardHeader>
+          <CardContent>
+            <ScheduleGrid unitId={selectedUnitId} disabled={!selectedUnitId || isPending} />
           </CardContent>
         </Card>
       </div>
