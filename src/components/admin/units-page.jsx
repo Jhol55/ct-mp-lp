@@ -761,7 +761,7 @@ export function UnitsPage() {
                       className="mt-2"
                     />
                   </div>
-                  <div className="col-span-1 flex items-center justify-center pb-2">
+                  <div className="col-span-1 flex items-center justify-center">
                     <Button
                       type="button"
                       variant="ghost"
