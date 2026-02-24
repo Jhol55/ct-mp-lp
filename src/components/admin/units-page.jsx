@@ -55,9 +55,11 @@ export function UnitsPage() {
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef(null);
   const scheduleFileInputRef = useRef(null);
+  const scheduleSaveRef = useRef(null); // Ref para função de salvar do grid
 
   // Unsaved changes tracking
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [hasUnsavedScheduleChanges, setHasUnsavedScheduleChanges] = useState(false);
   const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState(null);
 
@@ -145,7 +147,7 @@ export function UnitsPage() {
   // Warn before leaving page with unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e) => {
-      if (hasUnsavedChanges) {
+      if (hasUnsavedChanges || hasUnsavedScheduleChanges) {
         e.preventDefault();
         e.returnValue = "";
         return "";
@@ -156,7 +158,7 @@ export function UnitsPage() {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [hasUnsavedChanges]);
+  }, [hasUnsavedChanges, hasUnsavedScheduleChanges]);
 
   useEffect(() => {
     if (selectedUnit) {
@@ -308,9 +310,15 @@ export function UnitsPage() {
           zipCode,
         });
 
+        // Salvar mudanças do grid de horários
+        if (hasUnsavedScheduleChanges && scheduleSaveRef.current) {
+          await scheduleSaveRef.current();
+        }
+
         await refreshSelectedUnit(selectedUnitId);
         await refreshUnits();
         setHasUnsavedChanges(false);
+        setHasUnsavedScheduleChanges(false);
       } catch (e) {
         setError(String(e?.message || e));
       }
@@ -465,7 +473,7 @@ export function UnitsPage() {
               <button
                 key={u.id}
                 onClick={() => {
-                  if (hasUnsavedChanges) {
+                  if (hasUnsavedChanges || hasUnsavedScheduleChanges) {
                     setPendingNavigation(() => () => setSelectedUnitId(u.id));
                     setShowUnsavedChangesModal(true);
                   } else {
@@ -514,9 +522,9 @@ export function UnitsPage() {
               </Button>
               <Button
                 onClick={handleSaveAll}
-                disabled={!hasUnsavedChanges || isPending}
+                disabled={(!hasUnsavedChanges && !hasUnsavedScheduleChanges) || isPending}
                 className="ml-auto"
-                variant={hasUnsavedChanges ? "default" : "outline"}
+                variant={hasUnsavedChanges || hasUnsavedScheduleChanges ? "default" : "outline"}
               >
                 <Save className="size-4 mr-2" />
                 Salvar
@@ -807,7 +815,14 @@ export function UnitsPage() {
                 </p>
               </CardHeader>
               <CardContent>
-                <ScheduleGrid unitId={selectedUnitId} disabled={!selectedUnitId || isPending} />
+                <ScheduleGrid
+                  unitId={selectedUnitId}
+                  disabled={!selectedUnitId || isPending}
+                  onUnsavedChanges={(hasChanges) => setHasUnsavedScheduleChanges(hasChanges)}
+                  onSave={(saveFn) => {
+                    scheduleSaveRef.current = saveFn;
+                  }}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -842,6 +857,7 @@ export function UnitsPage() {
               onClick={async () => {
                 setShowUnsavedChangesModal(false);
                 setHasUnsavedChanges(false);
+                setHasUnsavedScheduleChanges(false);
                 // Resetar estados para descartar mudanças
                 if (selectedUnitId) {
                   await refreshSelectedUnit(selectedUnitId);

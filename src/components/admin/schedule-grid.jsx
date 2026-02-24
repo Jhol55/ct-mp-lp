@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { getSchedule, upsertScheduleSlot, deleteScheduleSlot, getScheduleVisibility, updateScheduleVisibility } from "@/actions/schedule";
+import { getSchedule, upsertScheduleSlot, deleteScheduleSlot, getScheduleVisibility, updateScheduleVisibility, bulkUpdateScheduleSlots } from "@/actions/schedule";
 
 // Helper para gerar nome da aula a partir de modality e classType
 function formatClassName(modality, classType) {
@@ -76,13 +76,15 @@ const CLASS_TYPES = [
   { value: "LIVRE", label: "Livre" },
 ];
 
-export function ScheduleGrid({ unitId, disabled = false }) {
+export function ScheduleGrid({ unitId, disabled = false, onUnsavedChanges, onSave }) {
   const [slots, setSlots] = useState([]);
+  const [originalSlots, setOriginalSlots] = useState([]); // Para comparar mudanças
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
 
   // Visibility state
   const [hiddenTimeSlots, setHiddenTimeSlots] = useState([]);
+  const [originalHiddenTimeSlots, setOriginalHiddenTimeSlots] = useState([]);
   const [visibilityModalOpen, setVisibilityModalOpen] = useState(false);
   const [tempHiddenTimeSlots, setTempHiddenTimeSlots] = useState([]);
 
@@ -98,8 +100,11 @@ export function ScheduleGrid({ unitId, disabled = false }) {
     if (!unitId) return;
     try {
       const data = await getSchedule(unitId);
-      setSlots(Array.isArray(data) ? data : []);
+      const slotsArray = Array.isArray(data) ? data : [];
+      setSlots(slotsArray);
+      setOriginalSlots(JSON.parse(JSON.stringify(slotsArray))); // Deep copy
       setError("");
+      // Não verificar mudanças aqui pois originalSlots ainda está sendo setado
     } catch (e) {
       setError(String(e?.message || e));
     }
@@ -111,11 +116,31 @@ export function ScheduleGrid({ unitId, disabled = false }) {
       const data = await getScheduleVisibility(unitId);
       const hidden = Array.isArray(data?.hiddenTimeSlots) ? data.hiddenTimeSlots : [];
       setHiddenTimeSlots(hidden);
+      setOriginalHiddenTimeSlots([...hidden]);
       setError("");
+      // Não verificar mudanças aqui pois originalHiddenTimeSlots ainda está sendo setado
     } catch (e) {
       setError(String(e?.message || e));
     }
   }
+
+  function checkForUnsavedChanges() {
+    if (!onUnsavedChanges) return;
+    
+    const slotsChanged = JSON.stringify(slots) !== JSON.stringify(originalSlots);
+    const visibilityChanged = JSON.stringify(hiddenTimeSlots) !== JSON.stringify(originalHiddenTimeSlots);
+    
+    onUnsavedChanges(slotsChanged || visibilityChanged);
+  }
+
+  // Verificar mudanças sempre que slots ou hiddenTimeSlots mudarem
+  useEffect(() => {
+    // Só verificar se já temos os originais carregados
+    if (originalSlots.length > 0 || slots.length > 0 || originalHiddenTimeSlots.length > 0 || hiddenTimeSlots.length > 0) {
+      checkForUnsavedChanges();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slots, hiddenTimeSlots]);
 
   useEffect(() => {
     loadSchedule();
@@ -149,42 +174,111 @@ export function ScheduleGrid({ unitId, disabled = false }) {
     setDurationMinutes(60);
   }
 
-  async function handleSave() {
+  function handleSave() {
     if (!unitId || selectedDay === null || !selectedTime) return;
 
-    startTransition(async () => {
-      try {
-        setError("");
-        await upsertScheduleSlot(
-          unitId,
-          selectedDay,
-          selectedTime,
-          modality,
-          classType,
-          durationMinutes,
-        );
-        await loadSchedule();
-        closeModal();
-      } catch (e) {
-        setError(String(e?.message || e));
-      }
+    // Atualiza o estado local sem salvar no backend
+    const existingIndex = slots.findIndex(
+      (s) => s.dayOfWeek === selectedDay && s.time === selectedTime,
+    );
+
+    const newSlot = {
+      id: existingIndex >= 0 ? slots[existingIndex].id : crypto.randomUUID(),
+      unitId,
+      dayOfWeek: selectedDay,
+      time: selectedTime,
+      modality: modality || null,
+      classType: classType || "LIVRE",
+      durationMinutes: durationMinutes || 60,
+    };
+
+    if (existingIndex >= 0) {
+      const updated = [...slots];
+      updated[existingIndex] = newSlot;
+      setSlots(updated);
+    } else {
+      setSlots([...slots, newSlot]);
+    }
+
+    closeModal();
+  }
+
+  function handleDelete() {
+    if (!unitId || selectedDay === null || !selectedTime) return;
+
+    // Remove do estado local sem salvar no backend
+    const updated = slots.filter(
+      (s) => !(s.dayOfWeek === selectedDay && s.time === selectedTime),
+    );
+    setSlots(updated);
+    closeModal();
+  }
+
+  // Função exposta para salvar todas as mudanças
+  async function saveAllChanges() {
+    if (!unitId) return;
+
+    return new Promise((resolve, reject) => {
+      startTransition(async () => {
+        try {
+          setError("");
+
+          // Salvar slots - usar upsert individual para cada slot
+          const slotsToSave = slots.filter((s) => s.modality); // Apenas slots com modalidade
+          for (const slot of slotsToSave) {
+            await upsertScheduleSlot(
+              unitId,
+              slot.dayOfWeek,
+              slot.time,
+              slot.modality,
+              slot.classType,
+              slot.durationMinutes,
+            );
+          }
+
+          // Deletar slots que foram removidos
+          const originalSlotKeys = new Set(
+            originalSlots.map((s) => `${s.dayOfWeek}-${s.time}`),
+          );
+          const currentSlotKeys = new Set(
+            slots.map((s) => `${s.dayOfWeek}-${s.time}`),
+          );
+
+          for (const originalSlot of originalSlots) {
+            const key = `${originalSlot.dayOfWeek}-${originalSlot.time}`;
+            if (!currentSlotKeys.has(key)) {
+              await deleteScheduleSlot(unitId, originalSlot.dayOfWeek, originalSlot.time);
+            }
+          }
+
+          // Salvar visibilidade
+          if (JSON.stringify(hiddenTimeSlots) !== JSON.stringify(originalHiddenTimeSlots)) {
+            await updateScheduleVisibility(unitId, hiddenTimeSlots);
+          }
+
+          // Recarregar para sincronizar e resetar flags
+          await loadSchedule();
+          await loadVisibility();
+          // Resetar flag de mudanças não salvas após salvar
+          if (onUnsavedChanges) {
+            onUnsavedChanges(false);
+          }
+          resolve();
+        } catch (e) {
+          setError(String(e?.message || e));
+          reject(e);
+        }
+      });
     });
   }
 
-  async function handleDelete() {
-    if (!unitId || selectedDay === null || !selectedTime) return;
-
-    startTransition(async () => {
-      try {
-        setError("");
-        await deleteScheduleSlot(unitId, selectedDay, selectedTime);
-        await loadSchedule();
-        closeModal();
-      } catch (e) {
-        setError(String(e?.message || e));
-      }
-    });
-  }
+  // Expor função de salvamento para o componente pai
+  useEffect(() => {
+    if (onSave) {
+      onSave(saveAllChanges);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slots, hiddenTimeSlots, unitId]);
 
   const hasExistingSlot = selectedDay !== null && selectedTime && getSlot(selectedDay, selectedTime);
 
@@ -435,18 +529,9 @@ export function ScheduleGrid({ unitId, disabled = false }) {
             </Button>
             <Button
               type="button"
-              onClick={async () => {
-                if (!unitId) return;
-                startTransition(async () => {
-                  try {
-                    setError("");
-                    await updateScheduleVisibility(unitId, tempHiddenTimeSlots);
-                    setHiddenTimeSlots([...tempHiddenTimeSlots]);
-                    setVisibilityModalOpen(false);
-                  } catch (e) {
-                    setError(String(e?.message || e));
-                  }
-                });
+              onClick={() => {
+                setHiddenTimeSlots([...tempHiddenTimeSlots]);
+                setVisibilityModalOpen(false);
               }}
               disabled={isPending}
             >

@@ -15,7 +15,7 @@ import {
   SidebarRail,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Home, Inbox, Calendar, Settings, LogOut, Building2 } from "lucide-react";
+import { Home, LogOut, Building2 } from "lucide-react";
 import { logout } from "@/actions/auth";
 
 function isAdminHost() {
@@ -44,21 +44,6 @@ export function AppSidebar() {
       title: "Unidades",
       url: unitsUrl,
       icon: Building2,
-    },
-    {
-      title: "Inbox",
-      url: "#",
-      icon: Inbox,
-    },
-    {
-      title: "Calendar",
-      url: "#",
-      icon: Calendar,
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings,
     },
   ];
 
