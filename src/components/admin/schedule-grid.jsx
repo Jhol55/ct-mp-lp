@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { getSchedule, upsertScheduleSlot, deleteScheduleSlot, getScheduleVisibility, updateScheduleVisibility } from "@/actions/schedule";
 
 // Helper para gerar nome da aula a partir de modality e classType
