@@ -601,7 +601,7 @@ export function UnitsPage() {
                       className="mt-2"
                     />
                   </div>
-                  <div className="col-span-1 flex items-center justify-center">
+                  <div className="col-span-1 flex items-center justify-center h-9">
                     <Button
                       type="button"
                       variant="ghost"
@@ -768,7 +768,7 @@ export function UnitsPage() {
                       className="mt-2"
                     />
                   </div>
-                  <div className="col-span-1 flex items-center justify-center">
+                  <div className="col-span-1 flex items-center justify-center h-9">
                     <Button
                       type="button"
                       variant="ghost"
