@@ -205,5 +205,47 @@ export class UnitsService {
       include: { prices: true },
     });
   }
+
+  async deleteUnit(id) {
+    // Buscar a unidade para obter as keys das imagens
+    const unit = await this.prisma.unit.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        plansImageKey: true,
+        scheduleImageKey: true,
+      },
+    });
+
+    if (!unit) {
+      throw new NotFoundException('Unit not found');
+    }
+
+    // Deletar imagens do MinIO se existirem
+    if (unit.plansImageKey) {
+      try {
+        await this.uploads.deleteObject(unit.plansImageKey);
+      } catch (e) {
+        // Log error but don't fail deletion if image deletion fails
+        console.error('Failed to delete plans image from MinIO:', e);
+      }
+    }
+
+    if (unit.scheduleImageKey) {
+      try {
+        await this.uploads.deleteObject(unit.scheduleImageKey);
+      } catch (e) {
+        // Log error but don't fail deletion if image deletion fails
+        console.error('Failed to delete schedule image from MinIO:', e);
+      }
+    }
+
+    // Deletar a unidade (cascade delete cuidará dos planos, slots, etc)
+    try {
+      await this.prisma.unit.delete({ where: { id } });
+    } catch (e) {
+      throw new NotFoundException('Unit not found');
+    }
+  }
 }
 

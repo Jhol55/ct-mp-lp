@@ -2,6 +2,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Inject,
   Param,
@@ -47,6 +48,11 @@ export class UnitsController {
   @Patch(':id/plans/:planId')
   async patchPlan(@Param('planId') planId, @Body() body) {
     return this.units.updatePlan(planId, body);
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id) {
+    return this.units.deleteUnit(id);
   }
 }
 
