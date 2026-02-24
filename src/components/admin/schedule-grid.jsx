@@ -76,7 +76,7 @@ export function ScheduleGrid({ unitId, disabled = false }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
-  const [modality, setModality] = useState("");
+  const [modality, setModality] = useState("MUAY_THAI");
   const [classType, setClassType] = useState("LIVRE");
   const [durationMinutes, setDurationMinutes] = useState(60);
 
@@ -107,7 +107,7 @@ export function ScheduleGrid({ unitId, disabled = false }) {
     const slot = getSlot(dayOfWeek, time);
     setSelectedDay(dayOfWeek);
     setSelectedTime(time);
-    setModality(slot?.modality || "");
+    setModality(slot?.modality || "MUAY_THAI");
     setClassType(slot?.classType || "LIVRE");
     setDurationMinutes(slot?.durationMinutes || 60);
     setModalOpen(true);
@@ -117,17 +117,13 @@ export function ScheduleGrid({ unitId, disabled = false }) {
     setModalOpen(false);
     setSelectedDay(null);
     setSelectedTime(null);
-    setModality("");
+    setModality("MUAY_THAI");
     setClassType("LIVRE");
     setDurationMinutes(60);
   }
 
   async function handleSave() {
     if (!unitId || selectedDay === null || !selectedTime) return;
-    if (!modality) {
-      setError("Selecione uma modalidade");
-      return;
-    }
 
     startTransition(async () => {
       try {
@@ -330,7 +326,7 @@ export function ScheduleGrid({ unitId, disabled = false }) {
             <Button
               type="button"
               onClick={handleSave}
-              disabled={isPending || !modality}
+              disabled={isPending}
             >
               Salvar
             </Button>
