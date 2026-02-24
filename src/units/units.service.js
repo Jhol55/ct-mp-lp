@@ -6,11 +6,13 @@ import {
   Inject,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { UploadsService } from '../uploads/uploads.service.js';
 
 @Injectable()
 export class UnitsService {
-  constructor(@Inject(PrismaService) prisma) {
+  constructor(@Inject(PrismaService) prisma, @Inject(UploadsService) uploads) {
     this.prisma = prisma;
+    this.uploads = uploads;
   }
 
   async listUnits() {
@@ -53,6 +55,17 @@ export class UnitsService {
       data.plansImageUrl = patch.plansImageUrl ? String(patch.plansImageUrl) : null;
     if (patch?.plansImageKey !== undefined)
       data.plansImageKey = patch.plansImageKey ? String(patch.plansImageKey) : null;
+
+    // Delete old image from MinIO when a new one is being set
+    if (patch?.plansImageKey) {
+      const existing = await this.prisma.unit.findUnique({
+        where: { id },
+        select: { plansImageKey: true },
+      });
+      if (existing?.plansImageKey && existing.plansImageKey !== patch.plansImageKey) {
+        await this.uploads.deleteObject(existing.plansImageKey);
+      }
+    }
 
     try {
       return await this.prisma.unit.update({ where: { id }, data });

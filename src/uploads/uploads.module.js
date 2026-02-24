@@ -9,6 +9,7 @@ import { AuthModule } from '../auth/auth.module.js';
   imports: [AuthModule],
   controllers: [UploadsController],
   providers: [UploadsService, AdminGuard],
+  exports: [UploadsService],
 })
 export class UploadsModule {}
 

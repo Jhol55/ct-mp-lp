@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import { BadRequestException, Injectable, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import crypto from 'node:crypto';
 
@@ -80,6 +80,13 @@ export class UploadsService {
     const publicUrl = `${publicBaseUrl.replace(/\/$/, '')}/${key}`;
 
     return { uploadUrl, publicUrl, key };
+  }
+
+  async deleteObject(key) {
+    if (!this.s3 || !key) return;
+    const bucket = this.config.get('S3_BUCKET');
+    if (!bucket) return;
+    await this.s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
   }
 }
 
