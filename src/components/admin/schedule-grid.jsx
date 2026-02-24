@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { getSchedule, upsertScheduleSlot, deleteScheduleSlot } from "@/actions/schedule";
+import { getSchedule, upsertScheduleSlot, deleteScheduleSlot, getScheduleVisibility, updateScheduleVisibility } from "@/actions/schedule";
 
 // Helper para gerar nome da aula a partir de modality e classType
 function formatClassName(modality, classType) {
@@ -36,6 +36,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 
@@ -78,6 +79,11 @@ export function ScheduleGrid({ unitId, disabled = false }) {
   const [slots, setSlots] = useState([]);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
+
+  // Visibility state
+  const [hiddenTimeSlots, setHiddenTimeSlots] = useState([]);
+  const [visibilityModalOpen, setVisibilityModalOpen] = useState(false);
+  const [tempHiddenTimeSlots, setTempHiddenTimeSlots] = useState([]);
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -182,7 +188,27 @@ export function ScheduleGrid({ unitId, disabled = false }) {
             <thead>
               <tr>
                 <th className="border border-muted bg-muted/50 px-3 py-2 text-left text-sm font-medium">
-                  Horário
+                  <div className="flex items-center gap-2">
+                    <span>Horário</span>
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="ghost"
+                      className="h-6 w-6"
+                      onClick={() => {
+                        setTempHiddenTimeSlots([...hiddenTimeSlots]);
+                        setVisibilityModalOpen(true);
+                      }}
+                      disabled={disabled || isPending}
+                      title="Gerenciar visibilidade dos horários"
+                    >
+                      {hiddenTimeSlots.length > 0 ? (
+                        <EyeOff className="size-4" />
+                      ) : (
+                        <Eye className="size-4" />
+                      )}
+                    </Button>
+                  </div>
                 </th>
                 {DAYS_OF_WEEK.map((day) => (
                   <th
@@ -333,6 +359,81 @@ export function ScheduleGrid({ unitId, disabled = false }) {
             <Button
               type="button"
               onClick={handleSave}
+              disabled={isPending}
+            >
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de visibilidade */}
+      <Dialog open={visibilityModalOpen} onOpenChange={setVisibilityModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Gerenciar visibilidade dos horários</DialogTitle>
+            <DialogDescription>
+              Marque os horários que deseja esconder na grade
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 max-h-[400px] overflow-y-auto">
+            <div className="grid grid-cols-2 gap-2">
+              {TIME_SLOTS.map((time) => {
+                const isHidden = tempHiddenTimeSlots.includes(time);
+                return (
+                  <label
+                    key={time}
+                    className="flex items-center gap-2 p-2 rounded-lg border cursor-pointer hover:bg-muted/50 transition"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!isHidden}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setTempHiddenTimeSlots(
+                            tempHiddenTimeSlots.filter((t) => t !== time)
+                          );
+                        } else {
+                          setTempHiddenTimeSlots([...tempHiddenTimeSlots, time]);
+                        }
+                      }}
+                      className="rounded border-gray-300"
+                    />
+                    <span className="text-sm">{time}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setVisibilityModalOpen(false);
+                setTempHiddenTimeSlots([...hiddenTimeSlots]);
+              }}
+              disabled={isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={async () => {
+                if (!unitId) return;
+                startTransition(async () => {
+                  try {
+                    setError("");
+                    await updateScheduleVisibility(unitId, tempHiddenTimeSlots);
+                    setHiddenTimeSlots(tempHiddenTimeSlots);
+                    setVisibilityModalOpen(false);
+                  } catch (e) {
+                    setError(String(e?.message || e));
+                  }
+                });
+              }}
               disabled={isPending}
             >
               Salvar

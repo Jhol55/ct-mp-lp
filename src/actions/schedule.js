@@ -26,3 +26,16 @@ export async function bulkUpdateScheduleSlots(unitId, slots) {
     body: JSON.stringify({ slots }),
   });
 }
+
+export async function getScheduleVisibility(unitId) {
+  return await fetchBackend(`/units/${unitId}/schedule/visibility`, {
+    method: "GET",
+  });
+}
+
+export async function updateScheduleVisibility(unitId, hiddenTimeSlots) {
+  return await fetchBackend(`/units/${unitId}/schedule/visibility`, {
+    method: "PUT",
+    body: JSON.stringify({ hiddenTimeSlots }),
+  });
+}
