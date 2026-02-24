@@ -54,6 +54,7 @@ export function UnitsPage() {
 
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef(null);
+  const scheduleFileInputRef = useRef(null);
 
   // Address fields
   const [address, setAddress] = useState("");
@@ -198,6 +199,41 @@ export function UnitsPage() {
         await updateUnit(selectedUnitId, {
           plansImageUrl: publicUrl,
           plansImageKey: key,
+        });
+        await refreshSelectedUnit(selectedUnitId);
+        await refreshUnits();
+      } catch (e) {
+        setError(String(e?.message || e));
+      }
+    });
+  }
+
+  async function handleUploadScheduleImage(file) {
+    if (!selectedUnitId || !file) return;
+    startTransition(async () => {
+      try {
+        setError("");
+        const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+        const { uploadUrl, publicUrl, key } = await presignUpload({
+          contentType: file.type || "image/jpeg",
+          ext,
+          type: "schedule",
+        });
+
+        const put = await fetch(uploadUrl, {
+          method: "PUT",
+          headers: {
+            "Content-Type": file.type || "image/jpeg",
+          },
+          body: file,
+        });
+        if (!put.ok) {
+          throw new Error(`Upload falhou (${put.status})`);
+        }
+
+        await updateUnit(selectedUnitId, {
+          scheduleImageUrl: publicUrl,
+          scheduleImageKey: key,
         });
         await refreshSelectedUnit(selectedUnitId);
         await refreshUnits();
@@ -629,7 +665,62 @@ export function UnitsPage() {
           </TabsContent>
 
           {/* ── Tab: Horários ── */}
-          <TabsContent value="horarios" className="mt-6">
+          <TabsContent value="horarios" className="space-y-6 mt-6">
+            {/* ── Schedule image upload ── */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Imagem dos Horários</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Faça upload da imagem contendo os horários disponíveis
+                </p>
+              </CardHeader>
+              <CardContent>
+                <input
+                  ref={scheduleFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleUploadScheduleImage(e.target.files?.[0])}
+                  disabled={!selectedUnitId || isPending}
+                  className="hidden"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => scheduleFileInputRef.current?.click()}
+                  disabled={!selectedUnitId || isPending}
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) handleUploadScheduleImage(file);
+                  }}
+                  className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {selectedUnit?.scheduleImageUrl ? (
+                    <Image
+                      src={`/api/image?url=${encodeURIComponent(selectedUnit.scheduleImageUrl)}`}
+                      alt="Imagem dos horários"
+                      width={600}
+                      height={300}
+                      className="max-h-64 w-auto rounded-lg object-contain"
+                    />
+                  ) : (
+                    <>
+                      <Upload className="mb-2 size-8 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        Arraste uma imagem aqui ou
+                      </span>
+                      <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
+                        Selecionar Arquivo
+                      </span>
+                    </>
+                  )}
+                </button>
+              </CardContent>
+            </Card>
+
+            {/* ── Schedule Grid ── */}
             <Card>
               <CardHeader>
                 <CardTitle>Grade de Horários</CardTitle>
