@@ -8,7 +8,13 @@ function formatClassName(modality, classType) {
   if (!modality) return null;
   
   const modalityLabel = modality === "MUAY_THAI" ? "Muay Thai" : "Funcional";
-  const typeLabel = classType === "KIDS" ? "Kids" : null;
+  let typeLabel = null;
+  
+  if (classType === "KIDS") {
+    typeLabel = "Kids";
+  } else if (classType === "ADULTOS") {
+    typeLabel = "Adultos";
+  }
   
   if (typeLabel) {
     return `${modalityLabel} - ${typeLabel}`;
@@ -63,8 +69,9 @@ const MODALITIES = [
 ];
 
 const CLASS_TYPES = [
-  { value: "LIVRE", label: "Livre" },
+  { value: "ADULTOS", label: "Adultos" },
   { value: "KIDS", label: "Kids" },
+  { value: "LIVRE", label: "Livre" },
 ];
 
 export function ScheduleGrid({ unitId, disabled = false }) {
