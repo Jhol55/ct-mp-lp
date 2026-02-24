@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Pencil, Upload, Save, Trash2 } from "lucide-react";
 import { createPlan, updatePlan } from "@/actions/plans";
 import { createUnit, deleteUnit, getUnit, listUnits, updateUnit } from "@/actions/units";
+import { createPartner, deletePartner, listPartners, updatePartner } from "@/actions/partners";
 import { presignUpload } from "@/actions/uploads";
 import { ScheduleGrid } from "@/components/admin/schedule-grid";
 import { Button } from "@/components/ui/button";
@@ -101,6 +102,24 @@ export function UnitsPage() {
   const [editPlanId, setEditPlanId] = useState(null);
   const [editPlanName, setEditPlanName] = useState("");
   const [editFrequencyLabel, setEditFrequencyLabel] = useState("");
+
+  // Partners
+  const [partners, setPartners] = useState([]);
+  
+  // Modal: new partner
+  const [partnerModalOpen, setPartnerModalOpen] = useState(false);
+  const [partnerName, setPartnerName] = useState("");
+  const [partnerRulesAndNotes, setPartnerRulesAndNotes] = useState("");
+
+  // Modal: edit partner
+  const [editPartnerModalOpen, setEditPartnerModalOpen] = useState(false);
+  const [editPartnerId, setEditPartnerId] = useState(null);
+  const [editPartnerName, setEditPartnerName] = useState("");
+  const [editPartnerRulesAndNotes, setEditPartnerRulesAndNotes] = useState("");
+
+  // Modal: delete partner
+  const [deletePartnerModalOpen, setDeletePartnerModalOpen] = useState(false);
+  const [partnerToDelete, setPartnerToDelete] = useState(null);
   const [editMinAge, setEditMinAge] = useState("");
   const [editMaxAge, setEditMaxAge] = useState("");
   const [editNotes, setEditNotes] = useState("");
@@ -145,6 +164,13 @@ export function UnitsPage() {
         setError("");
         setSelectedUnit(null);
         await refreshSelectedUnit(selectedUnitId);
+        // Carregar parceiros
+        if (selectedUnitId) {
+          const partnersData = await listPartners(selectedUnitId);
+          setPartners(Array.isArray(partnersData) ? partnersData : []);
+        } else {
+          setPartners([]);
+        }
       } catch (e) {
         setError(String(e?.message || e));
       }
@@ -356,6 +382,79 @@ export function UnitsPage() {
         // Fechar o modal
         setDeleteUnitModalOpen(false);
         setUnitToDelete(null);
+      } catch (e) {
+        setError(String(e?.message || e));
+      }
+    });
+  }
+
+  async function refreshPartners() {
+    if (!selectedUnitId) return;
+    try {
+      const partnersData = await listPartners(selectedUnitId);
+      setPartners(Array.isArray(partnersData) ? partnersData : []);
+    } catch (e) {
+      setError(String(e?.message || e));
+    }
+  }
+
+  async function handleCreatePartner(e) {
+    e?.preventDefault();
+    if (!selectedUnitId) return;
+    startTransition(async () => {
+      try {
+        setError("");
+        await createPartner(selectedUnitId, {
+          name: partnerName.trim(),
+          rulesAndNotes: partnerRulesAndNotes.trim() || null,
+        });
+        setPartnerName("");
+        setPartnerRulesAndNotes("");
+        setPartnerModalOpen(false);
+        await refreshPartners();
+      } catch (e) {
+        setError(String(e?.message || e));
+      }
+    });
+  }
+
+  function openEditPartnerModal(partner) {
+    setEditPartnerId(partner.id);
+    setEditPartnerName(partner.name);
+    setEditPartnerRulesAndNotes(partner.rulesAndNotes || "");
+    setEditPartnerModalOpen(true);
+  }
+
+  async function handleEditPartner(e) {
+    e?.preventDefault();
+    if (!selectedUnitId || !editPartnerId) return;
+    startTransition(async () => {
+      try {
+        setError("");
+        await updatePartner(selectedUnitId, editPartnerId, {
+          name: editPartnerName.trim(),
+          rulesAndNotes: editPartnerRulesAndNotes.trim() || null,
+        });
+        setEditPartnerModalOpen(false);
+        setEditPartnerId(null);
+        setEditPartnerName("");
+        setEditPartnerRulesAndNotes("");
+        await refreshPartners();
+      } catch (e) {
+        setError(String(e?.message || e));
+      }
+    });
+  }
+
+  async function handleDeletePartner() {
+    if (!selectedUnitId || !partnerToDelete) return;
+    startTransition(async () => {
+      try {
+        setError("");
+        await deletePartner(selectedUnitId, partnerToDelete.id);
+        await refreshPartners();
+        setDeletePartnerModalOpen(false);
+        setPartnerToDelete(null);
       } catch (e) {
         setError(String(e?.message || e));
       }
@@ -596,6 +695,7 @@ export function UnitsPage() {
             <TabsTrigger value="planos">Planos</TabsTrigger>
             <TabsTrigger value="endereco">Endereço</TabsTrigger>
             <TabsTrigger value="horarios">Horários</TabsTrigger>
+            <TabsTrigger value="parceiros">Parceiros</TabsTrigger>
           </TabsList>
 
           {/* ── Tab: Planos ── */}
@@ -911,6 +1011,75 @@ export function UnitsPage() {
                 />
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* ── Tab: Parceiros ── */}
+          <TabsContent value="parceiros" className="space-y-6 mt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Parceiros</h3>
+                <p className="text-sm text-muted-foreground">
+                  Gerencie os parceiros desta unidade (ex: Wellhub/Gympass, Totalpass)
+                </p>
+              </div>
+              <Button
+                onClick={() => setPartnerModalOpen(true)}
+                disabled={!selectedUnitId || isPending}
+              >
+                + Adicionar Parceiro
+              </Button>
+            </div>
+
+            {partners.length === 0 ? (
+              <Card>
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  Nenhum parceiro cadastrado ainda.
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {partners.map((partner) => (
+                  <Card key={partner.id}>
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{partner.name}</CardTitle>
+                        <div className="flex gap-2">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => openEditPartnerModal(partner)}
+                            title="Editar parceiro"
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                              setPartnerToDelete(partner);
+                              setDeletePartnerModalOpen(true);
+                            }}
+                            title="Excluir parceiro"
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    {partner.rulesAndNotes ? (
+                      <CardContent>
+                        <div className="space-y-2">
+                          <Label>Regras e Observações</Label>
+                          <div className="rounded-lg border bg-muted/30 p-3 text-sm whitespace-pre-wrap">
+                            {partner.rulesAndNotes}
+                          </div>
+                        </div>
+                      </CardContent>
+                    ) : null}
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>
@@ -1419,6 +1588,148 @@ export function UnitsPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ══════ Modal: Novo parceiro ══════ */}
+      <Dialog open={partnerModalOpen} onOpenChange={setPartnerModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Novo Parceiro</DialogTitle>
+            <DialogDescription>
+              Adicione um novo parceiro para esta unidade
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleCreatePartner} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="partnerName">Nome do Parceiro</Label>
+              <Input
+                id="partnerName"
+                value={partnerName}
+                onChange={(e) => setPartnerName(e.target.value)}
+                placeholder="Ex: Wellhub/Gympass, Totalpass"
+                disabled={isPending}
+                autoFocus
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="partnerRulesAndNotes">Regras e Observações</Label>
+              <Textarea
+                id="partnerRulesAndNotes"
+                value={partnerRulesAndNotes}
+                onChange={(e) => setPartnerRulesAndNotes(e.target.value)}
+                placeholder="Descreva as regras e observações sobre este parceiro (opcional)"
+                disabled={isPending}
+                rows={6}
+              />
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setPartnerModalOpen(false);
+                  setPartnerName("");
+                  setPartnerRulesAndNotes("");
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={!partnerName.trim() || isPending}>
+                Adicionar parceiro
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ══════ Modal: Editar parceiro ══════ */}
+      <Dialog open={editPartnerModalOpen} onOpenChange={setEditPartnerModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Editar Parceiro</DialogTitle>
+            <DialogDescription>
+              Altere os dados do parceiro
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleEditPartner} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="editPartnerName">Nome do Parceiro</Label>
+              <Input
+                id="editPartnerName"
+                value={editPartnerName}
+                onChange={(e) => setEditPartnerName(e.target.value)}
+                placeholder="Ex: Wellhub/Gympass, Totalpass"
+                disabled={isPending}
+                autoFocus
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="editPartnerRulesAndNotes">Regras e Observações</Label>
+              <Textarea
+                id="editPartnerRulesAndNotes"
+                value={editPartnerRulesAndNotes}
+                onChange={(e) => setEditPartnerRulesAndNotes(e.target.value)}
+                placeholder="Descreva as regras e observações sobre este parceiro (opcional)"
+                disabled={isPending}
+                rows={6}
+              />
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setEditPartnerModalOpen(false);
+                  setEditPartnerId(null);
+                  setEditPartnerName("");
+                  setEditPartnerRulesAndNotes("");
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={!editPartnerName.trim() || isPending}>
+                Salvar parceiro
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ══════ Modal: Excluir parceiro ══════ */}
+      <Dialog open={deletePartnerModalOpen} onOpenChange={setDeletePartnerModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Excluir Parceiro</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir o parceiro "{partnerToDelete?.name}"? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeletePartnerModalOpen(false);
+                setPartnerToDelete(null);
+              }}
+              disabled={isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeletePartner}
+              disabled={isPending}
+            >
+              Excluir
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
