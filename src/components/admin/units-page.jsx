@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { Pencil, Upload, Save } from "lucide-react";
+import { Pencil, Upload, Save, Trash2 } from "lucide-react";
 import { createPlan, updatePlan } from "@/actions/plans";
-import { createUnit, getUnit, listUnits, updateUnit } from "@/actions/units";
+import { createUnit, deleteUnit, getUnit, listUnits, updateUnit } from "@/actions/units";
 import { presignUpload } from "@/actions/uploads";
 import { ScheduleGrid } from "@/components/admin/schedule-grid";
 import { Button } from "@/components/ui/button";
@@ -82,6 +82,10 @@ export function UnitsPage() {
   // Modal: edit unit name
   const [editUnitModalOpen, setEditUnitModalOpen] = useState(false);
   const [editUnitName, setEditUnitName] = useState("");
+
+  // Modal: delete unit
+  const [deleteUnitModalOpen, setDeleteUnitModalOpen] = useState(false);
+  const [unitToDelete, setUnitToDelete] = useState(null);
 
   // Modal: new plan
   const [planModalOpen, setPlanModalOpen] = useState(false);
@@ -333,6 +337,31 @@ export function UnitsPage() {
     });
   }
 
+  async function handleDeleteUnit() {
+    if (!unitToDelete) return;
+    startTransition(async () => {
+      try {
+        setError("");
+        await deleteUnit(unitToDelete.id);
+        
+        // Se a unidade deletada estava selecionada, limpar a seleção
+        if (unitToDelete.id === selectedUnitId) {
+          setSelectedUnitId(null);
+          setSelectedUnit(null);
+        }
+        
+        // Atualizar a lista de unidades
+        await refreshUnits();
+        
+        // Fechar o modal
+        setDeleteUnitModalOpen(false);
+        setUnitToDelete(null);
+      } catch (e) {
+        setError(String(e?.message || e));
+      }
+    });
+  }
+
   async function handleCreatePlan(e) {
     e.preventDefault();
     if (!selectedUnitId) return;
@@ -478,23 +507,40 @@ export function UnitsPage() {
           {units.map((u) => {
             const active = u.id === selectedUnitId;
             return (
-              <button
+              <div
                 key={u.id}
-                onClick={() => {
-                  if (hasUnsavedChanges || hasUnsavedScheduleChanges) {
-                    setPendingNavigation(() => () => setSelectedUnitId(u.id));
-                    setShowUnsavedChangesModal(true);
-                  } else {
-                    setSelectedUnitId(u.id);
-                  }
-                }}
                 className={[
-                  "w-full rounded-xl px-3 py-2 text-left text-sm transition",
+                  "flex items-center gap-2 w-full rounded-xl px-3 py-2 text-sm transition",
                   active ? "bg-muted" : "hover:bg-muted/60",
                 ].join(" ")}
               >
-                <div className="font-medium">{u.name}</div>
-              </button>
+                <button
+                  onClick={() => {
+                    if (hasUnsavedChanges || hasUnsavedScheduleChanges) {
+                      setPendingNavigation(() => () => setSelectedUnitId(u.id));
+                      setShowUnsavedChangesModal(true);
+                    } else {
+                      setSelectedUnitId(u.id);
+                    }
+                  }}
+                  className="flex-1 text-left"
+                >
+                  <div className="font-medium">{u.name}</div>
+                </button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6 shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setUnitToDelete(u);
+                    setDeleteUnitModalOpen(true);
+                  }}
+                  title="Excluir unidade"
+                >
+                  <Trash2 className="size-3" />
+                </Button>
+              </div>
             );
           })}
           {!units.length ? (
@@ -1373,6 +1419,37 @@ export function UnitsPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ══════ Modal: Excluir unidade ══════ */}
+      <Dialog open={deleteUnitModalOpen} onOpenChange={setDeleteUnitModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Excluir Unidade</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja excluir a unidade "{unitToDelete?.name}"? Esta ação não pode ser desfeita e todos os planos, horários e dados relacionados serão permanentemente removidos.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteUnitModalOpen(false);
+                setUnitToDelete(null);
+              }}
+              disabled={isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteUnit}
+              disabled={isPending}
+            >
+              Excluir
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

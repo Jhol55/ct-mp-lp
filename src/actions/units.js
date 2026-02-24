@@ -24,3 +24,8 @@ export async function updateUnit(id, patch) {
   });
 }
 
+export async function deleteUnit(id) {
+  return await fetchBackend(`/units/${id}`, {
+    method: "DELETE",
+  });
+}
