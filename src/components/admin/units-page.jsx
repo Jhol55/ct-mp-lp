@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Image from "next/image";
-import { Pencil, Upload } from "lucide-react";
+import { Pencil, Upload, Save } from "lucide-react";
 import { createPlan, updatePlan } from "@/actions/plans";
 import { createUnit, getUnit, listUnits, updateUnit } from "@/actions/units";
 import { presignUpload } from "@/actions/uploads";
@@ -55,6 +55,11 @@ export function UnitsPage() {
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef(null);
   const scheduleFileInputRef = useRef(null);
+
+  // Unsaved changes tracking
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
 
   // Address fields
   const [address, setAddress] = useState("");
@@ -137,6 +142,22 @@ export function UnitsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedUnitId]);
 
+  // Warn before leaving page with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
   useEffect(() => {
     if (selectedUnit) {
       setAddress(selectedUnit.address || "");
@@ -145,6 +166,7 @@ export function UnitsPage() {
       setCity(selectedUnit.city || "");
       setState(selectedUnit.state || "");
       setZipCode(selectedUnit.zipCode || "");
+      setHasUnsavedChanges(false);
     }
   }, [selectedUnit]);
 
@@ -263,6 +285,38 @@ export function UnitsPage() {
     });
   }
 
+  async function handleSaveAll() {
+    if (!selectedUnitId) return;
+    startTransition(async () => {
+      try {
+        setError("");
+        
+        // Salvar nome da unidade se foi editado
+        if (editUnitName.trim() && editUnitName.trim() !== selectedUnit?.name) {
+          await updateUnit(selectedUnitId, { name: editUnitName.trim() });
+          setEditUnitName("");
+          setEditUnitModalOpen(false);
+        }
+
+        // Salvar campos de endereço
+        await updateUnit(selectedUnitId, {
+          address,
+          addressNumber,
+          neighborhood,
+          city,
+          state,
+          zipCode,
+        });
+
+        await refreshSelectedUnit(selectedUnitId);
+        await refreshUnits();
+        setHasUnsavedChanges(false);
+      } catch (e) {
+        setError(String(e?.message || e));
+      }
+    });
+  }
+
   async function handleCreatePlan(e) {
     e.preventDefault();
     if (!selectedUnitId) return;
@@ -311,17 +365,11 @@ export function UnitsPage() {
     const name = editUnitName.trim();
     if (!name || !selectedUnitId) return;
 
-    startTransition(async () => {
-      try {
-        setError("");
-        await updateUnit(selectedUnitId, { name });
-        setEditUnitModalOpen(false);
-        await refreshUnits();
-        await refreshSelectedUnit(selectedUnitId);
-      } catch (e) {
-        setError(String(e?.message || e));
-      }
-    });
+    // Apenas marca como mudança não salva, não salva ainda
+    if (name !== selectedUnit?.name) {
+      setHasUnsavedChanges(true);
+    }
+    setEditUnitModalOpen(false);
   }
 
   function openEditPlanModal(plan) {
@@ -416,7 +464,14 @@ export function UnitsPage() {
             return (
               <button
                 key={u.id}
-                onClick={() => setSelectedUnitId(u.id)}
+                onClick={() => {
+                  if (hasUnsavedChanges) {
+                    setPendingNavigation(() => () => setSelectedUnitId(u.id));
+                    setShowUnsavedChangesModal(true);
+                  } else {
+                    setSelectedUnitId(u.id);
+                  }
+                }}
                 className={[
                   "w-full rounded-xl px-3 py-2 text-left text-sm transition",
                   active ? "bg-muted" : "hover:bg-muted/60",
@@ -448,14 +503,25 @@ export function UnitsPage() {
             {selectedUnit?.name || "Selecione uma unidade"}
           </div>
           {selectedUnit ? (
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={openEditUnitModal}
-              title="Editar nome da unidade"
-            >
-              <Pencil className="size-4" />
-            </Button>
+            <>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={openEditUnitModal}
+                title="Editar nome da unidade"
+              >
+                <Pencil className="size-4" />
+              </Button>
+              <Button
+                onClick={handleSaveAll}
+                disabled={!hasUnsavedChanges || isPending}
+                className="ml-auto"
+                variant={hasUnsavedChanges ? "default" : "outline"}
+              >
+                <Save className="size-4 mr-2" />
+                Salvar
+              </Button>
+            </>
           ) : null}
         </div>
         <div className="text-sm text-muted-foreground">
@@ -595,10 +661,12 @@ export function UnitsPage() {
                   <Input
                     id="address"
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(e) => {
+                      setAddress(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
                     placeholder="Ex: Rua das Flores"
                     disabled={!selectedUnitId || isPending}
-                    onBlur={handleSaveAddress}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -607,10 +675,12 @@ export function UnitsPage() {
                     <Input
                       id="addressNumber"
                       value={addressNumber}
-                      onChange={(e) => setAddressNumber(e.target.value)}
+                      onChange={(e) => {
+                        setAddressNumber(e.target.value);
+                        setHasUnsavedChanges(true);
+                      }}
                       placeholder="Ex: 123"
                       disabled={!selectedUnitId || isPending}
-                      onBlur={handleSaveAddress}
                     />
                   </div>
                   <div className="space-y-2">
@@ -618,10 +688,12 @@ export function UnitsPage() {
                     <Input
                       id="zipCode"
                       value={zipCode}
-                      onChange={(e) => setZipCode(e.target.value)}
+                      onChange={(e) => {
+                        setZipCode(e.target.value);
+                        setHasUnsavedChanges(true);
+                      }}
                       placeholder="Ex: 12345-678"
                       disabled={!selectedUnitId || isPending}
-                      onBlur={handleSaveAddress}
                     />
                   </div>
                 </div>
@@ -630,10 +702,12 @@ export function UnitsPage() {
                   <Input
                     id="neighborhood"
                     value={neighborhood}
-                    onChange={(e) => setNeighborhood(e.target.value)}
+                    onChange={(e) => {
+                      setNeighborhood(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
                     placeholder="Ex: Centro"
                     disabled={!selectedUnitId || isPending}
-                    onBlur={handleSaveAddress}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -642,10 +716,12 @@ export function UnitsPage() {
                     <Input
                       id="city"
                       value={city}
-                      onChange={(e) => setCity(e.target.value)}
+                      onChange={(e) => {
+                        setCity(e.target.value);
+                        setHasUnsavedChanges(true);
+                      }}
                       placeholder="Ex: São Paulo"
                       disabled={!selectedUnitId || isPending}
-                      onBlur={handleSaveAddress}
                     />
                   </div>
                   <div className="space-y-2">
@@ -653,10 +729,12 @@ export function UnitsPage() {
                     <Input
                       id="state"
                       value={state}
-                      onChange={(e) => setState(e.target.value)}
+                      onChange={(e) => {
+                        setState(e.target.value);
+                        setHasUnsavedChanges(true);
+                      }}
                       placeholder="Ex: SP"
                       disabled={!selectedUnitId || isPending}
-                      onBlur={handleSaveAddress}
                     />
                   </div>
                 </div>
@@ -735,6 +813,67 @@ export function UnitsPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* ══════ Modal: Alterações não salvas ══════ */}
+      <Dialog open={showUnsavedChangesModal} onOpenChange={setShowUnsavedChangesModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Você tem alterações não salvas</DialogTitle>
+            <DialogDescription>
+              Deseja salvar suas alterações antes de sair?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowUnsavedChangesModal(false);
+                setPendingNavigation(null);
+              }}
+              disabled={isPending}
+              className="w-full sm:w-auto"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={async () => {
+                setShowUnsavedChangesModal(false);
+                setHasUnsavedChanges(false);
+                // Resetar estados para descartar mudanças
+                if (selectedUnitId) {
+                  await refreshSelectedUnit(selectedUnitId);
+                }
+                if (pendingNavigation) {
+                  pendingNavigation();
+                  setPendingNavigation(null);
+                }
+              }}
+              disabled={isPending}
+              className="w-full sm:w-auto"
+            >
+              Sair sem salvar
+            </Button>
+            <Button
+              type="button"
+              onClick={async () => {
+                await handleSaveAll();
+                setShowUnsavedChangesModal(false);
+                if (pendingNavigation) {
+                  pendingNavigation();
+                  setPendingNavigation(null);
+                }
+              }}
+              disabled={isPending}
+              className="w-full sm:w-auto"
+            >
+              Salvar e sair
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ══════ Modal: Nova unidade ══════ */}
       <Dialog open={unitModalOpen} onOpenChange={setUnitModalOpen}>
@@ -958,7 +1097,15 @@ export function UnitsPage() {
       </Dialog>
 
       {/* ══════ Modal: Editar nome da unidade ══════ */}
-      <Dialog open={editUnitModalOpen} onOpenChange={setEditUnitModalOpen}>
+      <Dialog open={editUnitModalOpen} onOpenChange={(open) => {
+        setEditUnitModalOpen(open);
+        if (!open) {
+          // Se fechar sem salvar e o nome foi alterado, marca como mudança não salva
+          if (editUnitName.trim() && editUnitName.trim() !== selectedUnit?.name) {
+            setHasUnsavedChanges(true);
+          }
+        }
+      }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Editar unidade</DialogTitle>
@@ -984,7 +1131,13 @@ export function UnitsPage() {
           <DialogFooter>
             <Button
               variant="outline"
-              onClick={() => setEditUnitModalOpen(false)}
+              onClick={() => {
+                setEditUnitModalOpen(false);
+                // Se o nome foi alterado, marca como mudança não salva
+                if (editUnitName.trim() && editUnitName.trim() !== selectedUnit?.name) {
+                  setHasUnsavedChanges(true);
+                }
+              }}
             >
               Cancelar
             </Button>
