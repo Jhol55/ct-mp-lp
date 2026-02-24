@@ -406,137 +406,143 @@ export function UnitsPage() {
         </div>
 
         {/* ── Plans image upload and address ── */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Imagem dos Planos e Endereço</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Faça upload da imagem e preencha o endereço da unidade
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* ── Left: Address fields ── */}
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="address">Endereço</Label>
-                  <Input
-                    id="address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    placeholder="Ex: Rua das Flores"
-                    disabled={!selectedUnitId || isPending}
-                    onBlur={handleSaveAddress}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="addressNumber">Número</Label>
-                    <Input
-                      id="addressNumber"
-                      value={addressNumber}
-                      onChange={(e) => setAddressNumber(e.target.value)}
-                      placeholder="Ex: 123"
-                      disabled={!selectedUnitId || isPending}
-                      onBlur={handleSaveAddress}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="zipCode">CEP</Label>
-                    <Input
-                      id="zipCode"
-                      value={zipCode}
-                      onChange={(e) => setZipCode(e.target.value)}
-                      placeholder="Ex: 12345-678"
-                      disabled={!selectedUnitId || isPending}
-                      onBlur={handleSaveAddress}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="neighborhood">Bairro</Label>
-                  <Input
-                    id="neighborhood"
-                    value={neighborhood}
-                    onChange={(e) => setNeighborhood(e.target.value)}
-                    placeholder="Ex: Centro"
-                    disabled={!selectedUnitId || isPending}
-                    onBlur={handleSaveAddress}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="city">Cidade</Label>
-                    <Input
-                      id="city"
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      placeholder="Ex: São Paulo"
-                      disabled={!selectedUnitId || isPending}
-                      onBlur={handleSaveAddress}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="state">Estado</Label>
-                    <Input
-                      id="state"
-                      value={state}
-                      onChange={(e) => setState(e.target.value)}
-                      placeholder="Ex: SP"
-                      disabled={!selectedUnitId || isPending}
-                      onBlur={handleSaveAddress}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* ── Right: Image upload ── */}
-              <div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleUploadPlansImage(e.target.files?.[0])}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* ── Left: Address ── */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Endereço</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Preencha o endereço da unidade
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="address">Endereço</Label>
+                <Input
+                  id="address"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Ex: Rua das Flores"
                   disabled={!selectedUnitId || isPending}
-                  className="hidden"
+                  onBlur={handleSaveAddress}
                 />
-
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={!selectedUnitId || isPending}
-                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const file = e.dataTransfer.files?.[0];
-                    if (file) handleUploadPlansImage(file);
-                  }}
-                  className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {selectedUnit?.plansImageUrl ? (
-                    <Image
-                      src={`/api/image?url=${encodeURIComponent(selectedUnit.plansImageUrl)}`}
-                      alt="Imagem dos planos"
-                      width={600}
-                      height={300}
-                      className="max-h-64 w-auto rounded-lg object-contain"
-                    />
-                  ) : (
-                    <>
-                      <Upload className="mb-2 size-8 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        Arraste uma imagem aqui ou
-                      </span>
-                      <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
-                        Selecionar Arquivo
-                      </span>
-                    </>
-                  )}
-                </button>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="addressNumber">Número</Label>
+                  <Input
+                    id="addressNumber"
+                    value={addressNumber}
+                    onChange={(e) => setAddressNumber(e.target.value)}
+                    placeholder="Ex: 123"
+                    disabled={!selectedUnitId || isPending}
+                    onBlur={handleSaveAddress}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="zipCode">CEP</Label>
+                  <Input
+                    id="zipCode"
+                    value={zipCode}
+                    onChange={(e) => setZipCode(e.target.value)}
+                    placeholder="Ex: 12345-678"
+                    disabled={!selectedUnitId || isPending}
+                    onBlur={handleSaveAddress}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="neighborhood">Bairro</Label>
+                <Input
+                  id="neighborhood"
+                  value={neighborhood}
+                  onChange={(e) => setNeighborhood(e.target.value)}
+                  placeholder="Ex: Centro"
+                  disabled={!selectedUnitId || isPending}
+                  onBlur={handleSaveAddress}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="city">Cidade</Label>
+                  <Input
+                    id="city"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="Ex: São Paulo"
+                    disabled={!selectedUnitId || isPending}
+                    onBlur={handleSaveAddress}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="state">Estado</Label>
+                  <Input
+                    id="state"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                    placeholder="Ex: SP"
+                    disabled={!selectedUnitId || isPending}
+                    onBlur={handleSaveAddress}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* ── Right: Image upload ── */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Imagem dos Planos</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Faça upload da imagem contendo todos os planos disponíveis
+              </p>
+            </CardHeader>
+            <CardContent>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleUploadPlansImage(e.target.files?.[0])}
+                disabled={!selectedUnitId || isPending}
+                className="hidden"
+              />
+
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={!selectedUnitId || isPending}
+                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) handleUploadPlansImage(file);
+                }}
+                className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {selectedUnit?.plansImageUrl ? (
+                  <Image
+                    src={`/api/image?url=${encodeURIComponent(selectedUnit.plansImageUrl)}`}
+                    alt="Imagem dos planos"
+                    width={600}
+                    height={300}
+                    className="max-h-64 w-auto rounded-lg object-contain"
+                  />
+                ) : (
+                  <>
+                    <Upload className="mb-2 size-8 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">
+                      Arraste uma imagem aqui ou
+                    </span>
+                    <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
+                      Selecionar Arquivo
+                    </span>
+                  </>
+                )}
+              </button>
+            </CardContent>
+          </Card>
+        </div>
 
         {/* ── Plans list ── */}
         <Card>
