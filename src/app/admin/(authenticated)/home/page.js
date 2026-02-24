@@ -25,10 +25,6 @@ export default async function AdminHomePage() {
             </button>
           </form>
         </div>
-
-        <div className="mt-6 rounded-xl border bg-muted/40 p-4 text-sm text-muted-foreground">
-          Próximo passo: criar as telas do painel (usuários, conteúdos, etc.).
-        </div>
       </div>
     </main>
   );
