@@ -11,12 +11,13 @@ SELECT
       'zipCode', u."zipCode",
       'paymentMethods', u."paymentMethods",
       'cancellationRules', u."cancellationRules",
+      'generalNotes', u."generalNotes",
       'modalities', COALESCE(
         (
           SELECT json_agg(
             json_build_object(
               'modality', m.modality,
-              'imageUrl', m."imageUrl",
+              'plansImageUrl', m."imageUrl",
               'plans', COALESCE(
                 (
                   SELECT json_agg(
@@ -30,7 +31,6 @@ SELECT
                         (
                           SELECT json_agg(
                             json_build_object(
-                              'id', pp.id,
                               'model', pp.model,
                               'priceCents', pp."priceCents"
                             )
@@ -95,5 +95,3 @@ SELECT
     ORDER BY u."createdAt"
   ) AS units
 FROM units u;
-
--

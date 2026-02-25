@@ -52,6 +52,7 @@ model Unit {
   zipCode         String?
   paymentMethods  String?
   cancellationRules String?
+  generalNotes    String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

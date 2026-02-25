@@ -87,6 +87,8 @@ export class UnitsService {
       data.paymentMethods = patch.paymentMethods ? String(patch.paymentMethods).trim() : null;
     if (patch?.cancellationRules !== undefined)
       data.cancellationRules = patch.cancellationRules ? String(patch.cancellationRules).trim() : null;
+    if (patch?.generalNotes !== undefined)
+      data.generalNotes = patch.generalNotes ? String(patch.generalNotes).trim() : null;
 
     // Delete old schedule image from MinIO when a new one is being set
     if (patch?.scheduleImageKey) {
