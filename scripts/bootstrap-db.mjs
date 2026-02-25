@@ -9,8 +9,14 @@ function run(cmd) {
 }
 
 async function tableExists(qualifiedName) {
+  const [schema, table] = qualifiedName.split('.');
+  // Escape schema and table names to prevent SQL injection
+  const escapedSchema = schema.replace(/'/g, "''");
+  const escapedTable = table.replace(/'/g, "''");
   const rows = await prisma.$queryRawUnsafe(
-    `SELECT to_regclass('${qualifiedName}')::text as name`,
+    `SELECT table_name as name
+     FROM information_schema.tables
+     WHERE table_schema = '${escapedSchema}' AND table_name = '${escapedTable}'`,
   );
   const name = rows?.[0]?.name ?? null;
   return !!name;
