@@ -13,28 +13,17 @@ async function tableExists(qualifiedName) {
   // Escape schema and table names to prevent SQL injection
   const escapedSchema = schema.replace(/'/g, "''");
   const escapedTable = table.replace(/'/g, "''");
-  try {
-    const rows = await prisma.$queryRawUnsafe(
-      `SELECT COUNT(*)::int as count
-       FROM information_schema.tables
-       WHERE table_schema = '${escapedSchema}' AND table_name = '${escapedTable}'`,
-    );
-    const count = rows?.[0]?.count ?? 0;
-    return count > 0;
-  } catch (error) {
-    // Fallback: try using pg_tables
-    try {
-      const rows = await prisma.$queryRawUnsafe(
-        `SELECT COUNT(*)::int as count
-         FROM pg_tables
-         WHERE schemaname = '${escapedSchema}' AND tablename = '${escapedTable}'`,
-      );
-      const count = rows?.[0]?.count ?? 0;
-      return count > 0;
-    } catch {
-      return false;
-    }
-  }
+  
+  // Use EXISTS which returns a boolean, avoiding regclass issues
+  const rows = await prisma.$queryRawUnsafe(
+    `SELECT EXISTS (
+      SELECT 1 
+      FROM information_schema.tables 
+      WHERE table_schema = '${escapedSchema}' 
+      AND table_name = '${escapedTable}'
+    ) as exists`,
+  );
+  return rows?.[0]?.exists ?? false;
 }
 
 async function main() {
