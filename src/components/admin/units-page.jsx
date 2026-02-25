@@ -713,7 +713,6 @@ export function UnitsPage() {
         <Tabs defaultValue="planos" className="w-full">
           <TabsList>
             <TabsTrigger value="planos">Planos</TabsTrigger>
-            <TabsTrigger value="modalidades">Modalidades</TabsTrigger>
             <TabsTrigger value="endereco">Endereço</TabsTrigger>
             <TabsTrigger value="horarios">Horários</TabsTrigger>
             <TabsTrigger value="parceiros">Parceiros</TabsTrigger>
@@ -752,75 +751,82 @@ export function UnitsPage() {
                 />
               </div>
             </div>
-          </TabsContent>
 
-          {/* ── Tab: Modalidades ── */}
-          <TabsContent value="modalidades" className="space-y-6 mt-6">
-            {modalities.map((modality) => {
-              const modalityName = modality.modality === "MUAY_THAI" ? "Muay Thai" : "Funcional";
-              
-              return (
-                <Card key={modality.id}>
-                  <CardHeader>
-                    <CardTitle>{modalityName}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
+            {/* ── Nested Tabs for Modalities ── */}
+            <Tabs defaultValue="muay-thai" className="w-full">
+              <TabsList>
+                <TabsTrigger value="muay-thai">Muay Thai</TabsTrigger>
+                <TabsTrigger value="funcional">Funcional</TabsTrigger>
+              </TabsList>
+
+              {modalities.map((modality) => {
+                const modalityName = modality.modality === "MUAY_THAI" ? "Muay Thai" : "Funcional";
+                const tabValue = modality.modality === "MUAY_THAI" ? "muay-thai" : "funcional";
+                
+                return (
+                  <TabsContent key={modality.id} value={tabValue} className="space-y-6 mt-6">
                     {/* ── Modality image upload ── */}
-                    <div>
-                      <Label className="mb-2 block">Imagem dos Planos</Label>
-                      <input
-                        ref={(el) => {
-                          modalityImageInputRefs.current[modality.id] = el;
-                        }}
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleUploadModalityImage(modality.id, e.target.files?.[0])}
-                        disabled={!selectedUnitId || isPending}
-                        className="hidden"
-                      />
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Imagem dos Planos</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          Faça upload da imagem contendo os planos disponíveis para {modalityName}
+                        </p>
+                      </CardHeader>
+                      <CardContent>
+                        <input
+                          ref={(el) => {
+                            modalityImageInputRefs.current[modality.id] = el;
+                          }}
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => handleUploadModalityImage(modality.id, e.target.files?.[0])}
+                          disabled={!selectedUnitId || isPending}
+                          className="hidden"
+                        />
 
-                      <button
-                        type="button"
-                        onClick={() => modalityImageInputRefs.current[modality.id]?.click()}
-                        disabled={!selectedUnitId || isPending}
-                        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const file = e.dataTransfer.files?.[0];
-                          if (file) handleUploadModalityImage(modality.id, file);
-                        }}
-                        className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {modality.imageUrl ? (
-                          <Image
-                            src={`/api/image?url=${encodeURIComponent(modality.imageUrl)}`}
-                            alt={`Imagem dos planos - ${modalityName}`}
-                            width={600}
-                            height={300}
-                            className="max-h-64 w-auto rounded-lg object-contain"
-                          />
-                        ) : (
-                          <>
-                            <Upload className="mb-2 size-8 text-muted-foreground" />
-                            <span className="text-sm text-muted-foreground">
-                              Arraste uma imagem aqui ou
-                            </span>
-                            <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
-                              Selecionar Arquivo
-                            </span>
-                          </>
-                        )}
-                      </button>
-                    </div>
+                        <button
+                          type="button"
+                          onClick={() => modalityImageInputRefs.current[modality.id]?.click()}
+                          disabled={!selectedUnitId || isPending}
+                          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const file = e.dataTransfer.files?.[0];
+                            if (file) handleUploadModalityImage(modality.id, file);
+                          }}
+                          className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {modality.imageUrl ? (
+                            <Image
+                              src={`/api/image?url=${encodeURIComponent(modality.imageUrl)}`}
+                              alt={`Imagem dos planos - ${modalityName}`}
+                              width={600}
+                              height={300}
+                              className="max-h-64 w-auto rounded-lg object-contain"
+                            />
+                          ) : (
+                            <>
+                              <Upload className="mb-2 size-8 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">
+                                Arraste uma imagem aqui ou
+                              </span>
+                              <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
+                                Selecionar Arquivo
+                              </span>
+                            </>
+                          )}
+                        </button>
+                      </CardContent>
+                    </Card>
 
                     {/* ── Plans list ── */}
-                    <div>
-                      <div className="mb-4 flex items-center justify-between">
-                        <Label>Planos</Label>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Planos</CardTitle>
                         <Button
                           variant="outline"
-                          size="sm"
                           onClick={() => {
                             setPlanModalityId(modality.id);
                             setPlanModalOpen(true);
@@ -829,8 +835,8 @@ export function UnitsPage() {
                         >
                           + Adicionar plano
                         </Button>
-                      </div>
-                      <div className="space-y-4">
+                      </CardHeader>
+                      <CardContent className="space-y-4">
                         {modality.plans?.length ? (
                           modality.plans.map((p) => (
                             <div key={p.id} className="rounded-xl border p-4">
@@ -868,12 +874,12 @@ export function UnitsPage() {
                             Nenhum plano ainda.
                           </div>
                         )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                );
+              })}
+            </Tabs>
           </TabsContent>
 
           {/* ── Tab: Endereço ── */}
