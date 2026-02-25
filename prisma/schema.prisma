@@ -55,7 +55,7 @@ model Unit {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  modalities        Modality[]
+  modalities        UnitModality[]
   scheduleSlots      ScheduleSlot[]
   scheduleVisibility ScheduleVisibility?
   partners           Partner[]
@@ -63,7 +63,7 @@ model Unit {
   @@map("units")
 }
 
-model Modality {
+model UnitModality {
   id        String   @id @default(uuid())
   unitId    String
   modality  Modality
@@ -91,7 +91,7 @@ model Plan {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  modality Modality    @relation(fields: [modalityId], references: [id], onDelete: Cascade)
+  modality UnitModality    @relation(fields: [modalityId], references: [id], onDelete: Cascade)
   prices   PlanPrice[]
 
   @@index([modalityId])

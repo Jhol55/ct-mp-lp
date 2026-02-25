@@ -113,7 +113,7 @@ export class UnitsService {
     if (!frequencyLabel) throw new BadRequestException('frequencyLabel is required');
 
     // Verify modality exists
-    const modality = await this.prisma.modality.findUnique({ where: { id: modalityId } });
+    const modality = await this.prisma.unitModality.findUnique({ where: { id: modalityId } });
     if (!modality) throw new NotFoundException('Modality not found');
 
     const prices = Array.isArray(payload?.prices) ? payload.prices : [];

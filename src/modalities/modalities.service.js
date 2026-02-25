@@ -16,7 +16,7 @@ export class ModalitiesService {
   }
 
   async listModalities(unitId) {
-    return this.prisma.modality.findMany({
+    return this.prisma.unitModality.findMany({
       where: { unitId },
       orderBy: { modality: 'asc' },
       include: {
@@ -29,7 +29,7 @@ export class ModalitiesService {
   }
 
   async getModality(id) {
-    const modality = await this.prisma.modality.findUnique({
+    const modality = await this.prisma.unitModality.findUnique({
       where: { id },
       include: {
         plans: {
@@ -43,7 +43,7 @@ export class ModalitiesService {
   }
 
   async updateModalityImage(modalityId, imageUrl, imageKey) {
-    const existing = await this.prisma.modality.findUnique({
+    const existing = await this.prisma.unitModality.findUnique({
       where: { id: modalityId },
       select: { imageKey: true },
     });
@@ -54,7 +54,7 @@ export class ModalitiesService {
       await this.uploads.deleteObject(existing.imageKey);
     }
 
-    return this.prisma.modality.update({
+    return this.prisma.unitModality.update({
       where: { id: modalityId },
       data: {
         imageUrl: imageUrl || null,
@@ -64,7 +64,7 @@ export class ModalitiesService {
   }
 
   async deleteModalityImage(modalityId) {
-    const existing = await this.prisma.modality.findUnique({
+    const existing = await this.prisma.unitModality.findUnique({
       where: { id: modalityId },
       select: { imageKey: true },
     });
@@ -74,7 +74,7 @@ export class ModalitiesService {
       await this.uploads.deleteObject(existing.imageKey);
     }
 
-    return this.prisma.modality.update({
+    return this.prisma.unitModality.update({
       where: { id: modalityId },
       data: {
         imageUrl: null,
