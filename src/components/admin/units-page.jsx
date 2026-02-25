@@ -41,6 +41,7 @@ const BILLING_MODELS = [
 const FREQUENCY_OPTIONS = [
   { value: "2 a 3x por semana", label: "2 a 3x por semana" },
   { value: "4 a 5x por semana", label: "4 a 5x por semana" },
+  { value: "Livre", label: "Livre (quantas vezes quiser por semana)" },
 ];
 
 function formatMoneyBRLFromCents(cents) {
