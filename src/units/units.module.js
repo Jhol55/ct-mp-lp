@@ -10,6 +10,7 @@ import { UploadsModule } from '../uploads/uploads.module.js';
   imports: [AuthModule, UploadsModule],
   controllers: [UnitsController],
   providers: [UnitsService, AdminGuard],
+  exports: [UnitsService],
 })
 export class UnitsModule {}
 

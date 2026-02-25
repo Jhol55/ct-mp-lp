@@ -42,8 +42,6 @@ model User {
 model Unit {
   id              String   @id @default(uuid())
   name            String
-  plansImageUrl   String?
-  plansImageKey   String?
   scheduleImageUrl String?
   scheduleImageKey String?
   address         String?
@@ -57,7 +55,7 @@ model Unit {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  plans              Plan[]
+  modalities        Modality[]
   scheduleSlots      ScheduleSlot[]
   scheduleVisibility ScheduleVisibility?
   partners           Partner[]
@@ -65,9 +63,26 @@ model Unit {
   @@map("units")
 }
 
+model Modality {
+  id        String   @id @default(uuid())
+  unitId    String
+  modality  Modality
+  imageUrl  String?
+  imageKey  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  unit   Unit   @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  plans  Plan[]
+
+  @@unique([unitId, modality])
+  @@index([unitId])
+  @@map("modalities")
+}
+
 model Plan {
   id             String   @id @default(uuid())
-  unitId         String
+  modalityId     String
   name           String
   frequencyLabel String
   minAge         Int?
@@ -76,10 +91,10 @@ model Plan {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  unit   Unit        @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  prices PlanPrice[]
+  modality Modality    @relation(fields: [modalityId], references: [id], onDelete: Cascade)
+  prices   PlanPrice[]
 
-  @@index([unitId])
+  @@index([modalityId])
   @@map("plans")
 }
 

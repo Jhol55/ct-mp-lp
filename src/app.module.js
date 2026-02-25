@@ -8,6 +8,7 @@ import { UploadsModule } from './uploads/uploads.module.js';
 import { UnitsModule } from './units/units.module.js';
 import { ScheduleModule } from './schedule/schedule.module.js';
 import { PartnersModule } from './partners/partners.module.js';
+import { ModalitiesModule } from './modalities/modalities.module.js';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { PartnersModule } from './partners/partners.module.js';
     UnitsModule,
     ScheduleModule,
     PartnersModule,
+    ModalitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

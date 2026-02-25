@@ -2,7 +2,6 @@ SELECT
   json_agg(
     json_build_object(
       'name', u.name,
-      'plansImageUrl', u."plansImageUrl",
       'scheduleImageUrl', u."scheduleImageUrl",
       'address', u.address,
       'addressNumber', u."addressNumber",
@@ -12,35 +11,49 @@ SELECT
       'zipCode', u."zipCode",
       'paymentMethods', u."paymentMethods",
       'cancellationRules', u."cancellationRules",
-      'plans', COALESCE(
+      'modalities', COALESCE(
         (
           SELECT json_agg(
             json_build_object(
-              'name', p.name,
-              'frequencyLabel', p."frequencyLabel",
-              'minAge', p."minAge",
-              'maxAge', p."maxAge",
-              'notes', p.notes,
-              'prices', COALESCE(
+              'modality', m.modality,
+              'imageUrl', m."imageUrl",
+              'plans', COALESCE(
                 (
                   SELECT json_agg(
                     json_build_object(
-                      'id', pp.id,
-                      'model', pp.model,
-                      'priceCents', pp."priceCents"
+                      'name', p.name,
+                      'frequencyLabel', p."frequencyLabel",
+                      'minAge', p."minAge",
+                      'maxAge', p."maxAge",
+                      'notes', p.notes,
+                      'prices', COALESCE(
+                        (
+                          SELECT json_agg(
+                            json_build_object(
+                              'id', pp.id,
+                              'model', pp.model,
+                              'priceCents', pp."priceCents"
+                            )
+                            ORDER BY pp.model
+                          )
+                          FROM plan_prices pp
+                          WHERE pp."planId" = p.id
+                        ),
+                        '[]'::json
+                      )
                     )
-                    ORDER BY pp.model
+                    ORDER BY p."createdAt"
                   )
-                  FROM plan_prices pp
-                  WHERE pp."planId" = p.id
+                  FROM plans p
+                  WHERE p."modalityId" = m.id
                 ),
                 '[]'::json
               )
             )
-            ORDER BY p."createdAt"
+            ORDER BY m.modality
           )
-          FROM plans p
-          WHERE p."unitId" = u.id
+          FROM modalities m
+          WHERE m."unitId" = u.id
         ),
         '[]'::json
       ),
@@ -61,6 +74,20 @@ SELECT
           )
           FROM schedule_slots ss
           WHERE ss."unitId" = u.id
+        ),
+        '[]'::json
+      ),
+      'partners', COALESCE(
+        (
+          SELECT json_agg(
+            json_build_object(
+              'name', pt.name,
+              'rulesAndNotes', pt."rulesAndNotes"
+            )
+            ORDER BY pt."createdAt"
+          )
+          FROM partners pt
+          WHERE pt."unitId" = u.id
         ),
         '[]'::json
       )

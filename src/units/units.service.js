@@ -21,7 +21,6 @@ export class UnitsService {
       select: {
         id: true,
         name: true,
-        plansImageUrl: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -32,9 +31,14 @@ export class UnitsService {
     const unit = await this.prisma.unit.findUnique({
       where: { id },
       include: {
-        plans: {
-          orderBy: { createdAt: 'asc' },
-          include: { prices: { orderBy: { model: 'asc' } } },
+        modalities: {
+          orderBy: { modality: 'asc' },
+          include: {
+            plans: {
+              orderBy: { createdAt: 'asc' },
+              include: { prices: { orderBy: { model: 'asc' } } },
+            },
+          },
         },
       },
     });
@@ -45,16 +49,24 @@ export class UnitsService {
   async createUnit(name) {
     const clean = String(name ?? '').trim();
     if (!clean) throw new BadRequestException('Name is required');
-    return this.prisma.unit.create({ data: { name: clean } });
+    
+    // Create unit with both modalities
+    return this.prisma.unit.create({
+      data: {
+        name: clean,
+        modalities: {
+          create: [
+            { modality: 'MUAY_THAI' },
+            { modality: 'FUNCIONAL' },
+          ],
+        },
+      },
+    });
   }
 
   async updateUnit(id, patch) {
     const data = {};
     if (patch?.name !== undefined) data.name = String(patch.name).trim();
-    if (patch?.plansImageUrl !== undefined)
-      data.plansImageUrl = patch.plansImageUrl ? String(patch.plansImageUrl) : null;
-    if (patch?.plansImageKey !== undefined)
-      data.plansImageKey = patch.plansImageKey ? String(patch.plansImageKey) : null;
     if (patch?.address !== undefined)
       data.address = patch.address ? String(patch.address).trim() : null;
     if (patch?.addressNumber !== undefined)
@@ -76,17 +88,6 @@ export class UnitsService {
     if (patch?.cancellationRules !== undefined)
       data.cancellationRules = patch.cancellationRules ? String(patch.cancellationRules).trim() : null;
 
-    // Delete old image from MinIO when a new one is being set
-    if (patch?.plansImageKey) {
-      const existing = await this.prisma.unit.findUnique({
-        where: { id },
-        select: { plansImageKey: true },
-      });
-      if (existing?.plansImageKey && existing.plansImageKey !== patch.plansImageKey) {
-        await this.uploads.deleteObject(existing.plansImageKey);
-      }
-    }
-
     // Delete old schedule image from MinIO when a new one is being set
     if (patch?.scheduleImageKey) {
       const existing = await this.prisma.unit.findUnique({
@@ -105,11 +106,15 @@ export class UnitsService {
     }
   }
 
-  async createPlan(unitId, payload) {
+  async createPlan(modalityId, payload) {
     const name = String(payload?.name ?? '').trim();
     const frequencyLabel = String(payload?.frequencyLabel ?? '').trim();
     if (!name) throw new BadRequestException('Plan name is required');
     if (!frequencyLabel) throw new BadRequestException('frequencyLabel is required');
+
+    // Verify modality exists
+    const modality = await this.prisma.modality.findUnique({ where: { id: modalityId } });
+    if (!modality) throw new NotFoundException('Modality not found');
 
     const prices = Array.isArray(payload?.prices) ? payload.prices : [];
     const createPrices = prices
@@ -132,7 +137,7 @@ export class UnitsService {
 
     return this.prisma.plan.create({
       data: {
-        unitId,
+        modalityId,
         name,
         frequencyLabel,
         minAge: Number.isFinite(minAge) && minAge >= 0 ? minAge : null,
@@ -210,10 +215,10 @@ export class UnitsService {
     // Buscar a unidade para obter as keys das imagens
     const unit = await this.prisma.unit.findUnique({
       where: { id },
-      select: {
-        id: true,
-        plansImageKey: true,
-        scheduleImageKey: true,
+      include: {
+        modalities: {
+          select: { imageKey: true },
+        },
       },
     });
 
@@ -221,16 +226,19 @@ export class UnitsService {
       throw new NotFoundException('Unit not found');
     }
 
-    // Deletar imagens do MinIO se existirem
-    if (unit.plansImageKey) {
-      try {
-        await this.uploads.deleteObject(unit.plansImageKey);
-      } catch (e) {
-        // Log error but don't fail deletion if image deletion fails
-        console.error('Failed to delete plans image from MinIO:', e);
+    // Deletar imagens das modalidades do MinIO se existirem
+    for (const modality of unit.modalities) {
+      if (modality.imageKey) {
+        try {
+          await this.uploads.deleteObject(modality.imageKey);
+        } catch (e) {
+          // Log error but don't fail deletion if image deletion fails
+          console.error('Failed to delete modality image from MinIO:', e);
+        }
       }
     }
 
+    // Deletar imagem de horários do MinIO se existir
     if (unit.scheduleImageKey) {
       try {
         await this.uploads.deleteObject(unit.scheduleImageKey);
