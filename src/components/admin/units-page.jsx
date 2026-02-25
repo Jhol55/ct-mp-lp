@@ -6,6 +6,7 @@ import { Pencil, Upload, Save, Trash2 } from "lucide-react";
 import { createPlan, updatePlan } from "@/actions/plans";
 import { createUnit, deleteUnit, getUnit, listUnits, updateUnit } from "@/actions/units";
 import { createPartner, deletePartner, listPartners, updatePartner } from "@/actions/partners";
+import { listModalities, updateModalityImage } from "@/actions/modalities";
 import { presignUpload } from "@/actions/uploads";
 import { ScheduleGrid } from "@/components/admin/schedule-grid";
 import { Button } from "@/components/ui/button";
@@ -54,9 +55,9 @@ export function UnitsPage() {
   const [error, setError] = useState("");
 
   const [isPending, startTransition] = useTransition();
-  const fileInputRef = useRef(null);
   const scheduleFileInputRef = useRef(null);
   const scheduleSaveRef = useRef(null); // Ref para função de salvar do grid
+  const modalityImageInputRefs = useRef({}); // Refs para upload de imagens das modalidades (objeto com chaves sendo modalityId)
 
   // Unsaved changes tracking
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -90,6 +91,7 @@ export function UnitsPage() {
 
   // Modal: new plan
   const [planModalOpen, setPlanModalOpen] = useState(false);
+  const [planModalityId, setPlanModalityId] = useState(null); // ID da modalidade para o plano sendo criado
   const [planName, setPlanName] = useState("");
   const [frequencyLabel, setFrequencyLabel] = useState("");
   const [minAge, setMinAge] = useState("");
@@ -100,11 +102,15 @@ export function UnitsPage() {
   // Modal: edit plan
   const [editPlanModalOpen, setEditPlanModalOpen] = useState(false);
   const [editPlanId, setEditPlanId] = useState(null);
+  const [editPlanModalityId, setEditPlanModalityId] = useState(null); // ID da modalidade para o plano sendo editado
   const [editPlanName, setEditPlanName] = useState("");
   const [editFrequencyLabel, setEditFrequencyLabel] = useState("");
 
   // Partners
   const [partners, setPartners] = useState([]);
+
+  // Modalities
+  const [modalities, setModalities] = useState([]);
   
   // Modal: new partner
   const [partnerModalOpen, setPartnerModalOpen] = useState(false);
@@ -128,10 +134,11 @@ export function UnitsPage() {
   const canSubmitPlan = useMemo(() => {
     return (
       selectedUnitId &&
+      planModalityId &&
       planName.trim().length > 0 &&
       frequencyLabel.trim().length > 0
     );
-  }, [selectedUnitId, planName, frequencyLabel]);
+  }, [selectedUnitId, planModalityId, planName, frequencyLabel]);
 
   async function refreshUnits() {
     const data = await listUnits();
@@ -164,12 +171,15 @@ export function UnitsPage() {
         setError("");
         setSelectedUnit(null);
         await refreshSelectedUnit(selectedUnitId);
-        // Carregar parceiros
+        // Carregar parceiros e modalidades
         if (selectedUnitId) {
           const partnersData = await listPartners(selectedUnitId);
           setPartners(Array.isArray(partnersData) ? partnersData : []);
+          const modalitiesData = await listModalities(selectedUnitId);
+          setModalities(Array.isArray(modalitiesData) ? modalitiesData : []);
         } else {
           setPartners([]);
+          setModalities([]);
         }
       } catch (e) {
         setError(String(e?.message || e));
@@ -234,8 +244,8 @@ export function UnitsPage() {
     });
   }
 
-  async function handleUploadPlansImage(file) {
-    if (!selectedUnitId || !file) return;
+  async function handleUploadModalityImage(modalityId, file) {
+    if (!selectedUnitId || !modalityId || !file) return;
     startTransition(async () => {
       try {
         setError("");
@@ -243,6 +253,7 @@ export function UnitsPage() {
         const { uploadUrl, publicUrl, key } = await presignUpload({
           contentType: file.type || "image/jpeg",
           ext,
+          type: "plans",
         });
 
         const put = await fetch(uploadUrl, {
@@ -256,16 +267,22 @@ export function UnitsPage() {
           throw new Error(`Upload falhou (${put.status})`);
         }
 
-        await updateUnit(selectedUnitId, {
-          plansImageUrl: publicUrl,
-          plansImageKey: key,
-        });
-        await refreshSelectedUnit(selectedUnitId);
-        await refreshUnits();
+        await updateModalityImage(selectedUnitId, modalityId, publicUrl, key);
+        await refreshModalities();
       } catch (e) {
         setError(String(e?.message || e));
       }
     });
+  }
+
+  async function refreshModalities() {
+    if (!selectedUnitId) return;
+    try {
+      const modalitiesData = await listModalities(selectedUnitId);
+      setModalities(Array.isArray(modalitiesData) ? modalitiesData : []);
+    } catch (e) {
+      setError(String(e?.message || e));
+    }
   }
 
   async function handleUploadScheduleImage(file) {
@@ -463,7 +480,7 @@ export function UnitsPage() {
 
   async function handleCreatePlan(e) {
     e.preventDefault();
-    if (!selectedUnitId) return;
+    if (!selectedUnitId || !planModalityId) return;
 
     startTransition(async () => {
       try {
@@ -477,7 +494,7 @@ export function UnitsPage() {
           }))
           .filter((p) => p.model && Number.isFinite(p.priceCents) && p.priceCents > 0);
 
-        await createPlan(selectedUnitId, {
+        await createPlan(selectedUnitId, planModalityId, {
           name: planName.trim(),
           frequencyLabel: frequencyLabel.trim(),
           minAge: minAge.trim() ? Number(minAge) : null,
@@ -492,8 +509,9 @@ export function UnitsPage() {
         setMaxAge("");
         setNotes("");
         setPriceRows([{ model: "MONTHLY", price: "" }]);
+        setPlanModalityId(null);
         setPlanModalOpen(false);
-        await refreshSelectedUnit(selectedUnitId);
+        await refreshModalities();
       } catch (e2) {
         setError(String(e2?.message || e2));
       }
@@ -516,8 +534,9 @@ export function UnitsPage() {
     setEditUnitModalOpen(false);
   }
 
-  function openEditPlanModal(plan) {
+  function openEditPlanModal(plan, modalityId) {
     setEditPlanId(plan.id);
+    setEditPlanModalityId(modalityId);
     setEditPlanName(plan.name);
     setEditFrequencyLabel(plan.frequencyLabel);
     setEditMinAge(plan.minAge ? String(plan.minAge) : "");
@@ -544,7 +563,7 @@ export function UnitsPage() {
 
   async function handleEditPlan(e) {
     e.preventDefault();
-    if (!selectedUnitId || !editPlanId) return;
+    if (!selectedUnitId || !editPlanId || !editPlanModalityId) return;
 
     startTransition(async () => {
       try {
@@ -558,7 +577,7 @@ export function UnitsPage() {
           }))
           .filter((p) => p.model && Number.isFinite(p.priceCents) && p.priceCents > 0);
 
-        await updatePlan(selectedUnitId, editPlanId, {
+        await updatePlan(selectedUnitId, editPlanModalityId, editPlanId, {
           name: editPlanName.trim(),
           frequencyLabel: editFrequencyLabel.trim(),
           minAge: editMinAge.trim() ? Number(editMinAge) : null,
@@ -568,7 +587,8 @@ export function UnitsPage() {
         });
 
         setEditPlanModalOpen(false);
-        await refreshSelectedUnit(selectedUnitId);
+        setEditPlanModalityId(null);
+        await refreshModalities();
       } catch (e2) {
         setError(String(e2?.message || e2));
       }
@@ -693,6 +713,7 @@ export function UnitsPage() {
         <Tabs defaultValue="planos" className="w-full">
           <TabsList>
             <TabsTrigger value="planos">Planos</TabsTrigger>
+            <TabsTrigger value="modalidades">Modalidades</TabsTrigger>
             <TabsTrigger value="endereco">Endereço</TabsTrigger>
             <TabsTrigger value="horarios">Horários</TabsTrigger>
             <TabsTrigger value="parceiros">Parceiros</TabsTrigger>
@@ -731,113 +752,128 @@ export function UnitsPage() {
                 />
               </div>
             </div>
+          </TabsContent>
 
-            {/* ── Plans image upload ── */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Imagem dos Planos</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Faça upload da imagem contendo todos os planos disponíveis
-                </p>
-              </CardHeader>
-              <CardContent>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleUploadPlansImage(e.target.files?.[0])}
-                  disabled={!selectedUnitId || isPending}
-                  className="hidden"
-                />
+          {/* ── Tab: Modalidades ── */}
+          <TabsContent value="modalidades" className="space-y-6 mt-6">
+            {modalities.map((modality) => {
+              const modalityName = modality.modality === "MUAY_THAI" ? "Muay Thai" : "Funcional";
+              
+              return (
+                <Card key={modality.id}>
+                  <CardHeader>
+                    <CardTitle>{modalityName}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* ── Modality image upload ── */}
+                    <div>
+                      <Label className="mb-2 block">Imagem dos Planos</Label>
+                      <input
+                        ref={(el) => {
+                          modalityImageInputRefs.current[modality.id] = el;
+                        }}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleUploadModalityImage(modality.id, e.target.files?.[0])}
+                        disabled={!selectedUnitId || isPending}
+                        className="hidden"
+                      />
 
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={!selectedUnitId || isPending}
-                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const file = e.dataTransfer.files?.[0];
-                    if (file) handleUploadPlansImage(file);
-                  }}
-                  className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {selectedUnit?.plansImageUrl ? (
-                    <Image
-                      src={`/api/image?url=${encodeURIComponent(selectedUnit.plansImageUrl)}`}
-                      alt="Imagem dos planos"
-                      width={600}
-                      height={300}
-                      className="max-h-64 w-auto rounded-lg object-contain"
-                    />
-                  ) : (
-                    <>
-                      <Upload className="mb-2 size-8 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        Arraste uma imagem aqui ou
-                      </span>
-                      <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
-                        Selecionar Arquivo
-                      </span>
-                    </>
-                  )}
-                </button>
-              </CardContent>
-            </Card>
+                      <button
+                        type="button"
+                        onClick={() => modalityImageInputRefs.current[modality.id]?.click()}
+                        disabled={!selectedUnitId || isPending}
+                        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const file = e.dataTransfer.files?.[0];
+                          if (file) handleUploadModalityImage(modality.id, file);
+                        }}
+                        className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {modality.imageUrl ? (
+                          <Image
+                            src={`/api/image?url=${encodeURIComponent(modality.imageUrl)}`}
+                            alt={`Imagem dos planos - ${modalityName}`}
+                            width={600}
+                            height={300}
+                            className="max-h-64 w-auto rounded-lg object-contain"
+                          />
+                        ) : (
+                          <>
+                            <Upload className="mb-2 size-8 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">
+                              Arraste uma imagem aqui ou
+                            </span>
+                            <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
+                              Selecionar Arquivo
+                            </span>
+                          </>
+                        )}
+                      </button>
+                    </div>
 
-            {/* ── Plans list ── */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Planos</CardTitle>
-                <Button
-                  variant="outline"
-                  onClick={() => setPlanModalOpen(true)}
-                  disabled={!selectedUnitId || isPending}
-                >
-                  + Adicionar plano
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {selectedUnit?.plans?.length ? (
-                  selectedUnit.plans.map((p) => (
-                    <div key={p.id} className="rounded-xl border p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="font-medium">{p.name}</div>
+                    {/* ── Plans list ── */}
+                    <div>
+                      <div className="mb-4 flex items-center justify-between">
+                        <Label>Planos</Label>
                         <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => openEditPlanModal(p)}
-                          title="Editar plano"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setPlanModalityId(modality.id);
+                            setPlanModalOpen(true);
+                          }}
+                          disabled={!selectedUnitId || isPending}
                         >
-                          <Pencil className="size-4" />
+                          + Adicionar plano
                         </Button>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        Frequência: {p.frequencyLabel}
-                      </div>
-                      <div className="mt-2 space-y-1 text-sm">
-                        {p.prices?.map((pr) => (
-                          <div key={pr.id} className="flex justify-between">
-                            <span>
-                              {BILLING_MODELS.find((m) => m.value === pr.model)?.label ??
-                                pr.model}
-                            </span>
-                            <span className="font-medium">
-                              {formatMoneyBRLFromCents(pr.priceCents)}
-                            </span>
+                      <div className="space-y-4">
+                        {modality.plans?.length ? (
+                          modality.plans.map((p) => (
+                            <div key={p.id} className="rounded-xl border p-4">
+                              <div className="flex items-center justify-between">
+                                <div className="font-medium">{p.name}</div>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => openEditPlanModal(p, modality.id)}
+                                  title="Editar plano"
+                                >
+                                  <Pencil className="size-4" />
+                                </Button>
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                Frequência: {p.frequencyLabel}
+                              </div>
+                              <div className="mt-2 space-y-1 text-sm">
+                                {p.prices?.map((pr) => (
+                                  <div key={pr.id} className="flex justify-between">
+                                    <span>
+                                      {BILLING_MODELS.find((m) => m.value === pr.model)?.label ??
+                                        pr.model}
+                                    </span>
+                                    <span className="font-medium">
+                                      {formatMoneyBRLFromCents(pr.priceCents)}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-sm text-muted-foreground">
+                            Nenhum plano ainda.
                           </div>
-                        ))}
+                        )}
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-muted-foreground">
-                    Nenhum plano ainda.
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </TabsContent>
 
           {/* ── Tab: Endereço ── */}
