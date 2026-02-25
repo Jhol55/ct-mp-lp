@@ -76,6 +76,7 @@ export function UnitsPage() {
   // Payment and cancellation fields
   const [paymentMethods, setPaymentMethods] = useState("");
   const [cancellationRules, setCancellationRules] = useState("");
+  const [generalNotes, setGeneralNotes] = useState("");
 
   // Modal: new unit
   const [unitModalOpen, setUnitModalOpen] = useState(false);
@@ -363,6 +364,7 @@ export function UnitsPage() {
           zipCode,
           paymentMethods,
           cancellationRules,
+          generalNotes,
         });
 
         // Salvar mudanças do grid de horários
@@ -716,6 +718,7 @@ export function UnitsPage() {
             <TabsTrigger value="endereco">Endereço</TabsTrigger>
             <TabsTrigger value="horarios">Horários</TabsTrigger>
             <TabsTrigger value="parceiros">Parceiros</TabsTrigger>
+            <TabsTrigger value="observacoes">Observações Gerais</TabsTrigger>
           </TabsList>
 
           {/* ── Tab: Planos ── */}
@@ -1122,6 +1125,34 @@ export function UnitsPage() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* ── Tab: Observações Gerais ── */}
+          <TabsContent value="observacoes" className="space-y-6 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Observações Gerais</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Adicione observações gerais sobre esta unidade
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Label htmlFor="generalNotes">Observações</Label>
+                  <Textarea
+                    id="generalNotes"
+                    value={generalNotes}
+                    onChange={(e) => {
+                      setGeneralNotes(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="Digite observações gerais sobre a unidade..."
+                    className="min-h-[200px]"
+                    disabled={!selectedUnitId || isPending}
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>
