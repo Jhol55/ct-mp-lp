@@ -215,6 +215,7 @@ export function UnitsPage() {
       setZipCode(selectedUnit.zipCode || "");
       setPaymentMethods(selectedUnit.paymentMethods || "");
       setCancellationRules(selectedUnit.cancellationRules || "");
+      setGeneralNotes(selectedUnit.generalNotes || "");
       setHasUnsavedChanges(false);
     }
   }, [selectedUnit]);
