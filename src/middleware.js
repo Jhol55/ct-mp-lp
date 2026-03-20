@@ -39,9 +39,9 @@ export default auth((request) => {
       return NextResponse.rewrite(new URL("/admin/login", request.url));
     }
     
-    // if (isAuthenticated && isAdmin && (isIndexPath || isLoginPath)) {
-    //   return NextResponse.redirect(new URL(`/home`, request.url));
-    // }
+    if (isAuthenticated && isAdmin && (isIndexPath || isLoginPath)) {
+      return NextResponse.redirect(new URL(`/admin/home`, request.url));
+    }
 
     if ((isAuthenticated && isAdmin) || (!isAuthenticated && isPublicRoute)) {
       return NextResponse.rewrite(new URL(`/admin${pathname}`, request.url));

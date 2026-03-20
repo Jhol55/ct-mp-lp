@@ -1094,82 +1094,6 @@ export function UnitsPage() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Agendamento Fixo e Variável</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Adicione uma imagem explicativa e uma descrição por escrito sobre o agendamento
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>Imagem Explicativa</Label>
-                  <input
-                    ref={scheduleExplanationImageInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleSelectScheduleExplanationImage(e.target.files?.[0])}
-                    disabled={!selectedUnitId || isPending}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => scheduleExplanationImageInputRef.current?.click()}
-                    disabled={!selectedUnitId || isPending}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const file = e.dataTransfer.files?.[0];
-                      if (file) handleSelectScheduleExplanationImage(file);
-                    }}
-                    className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {scheduleExplanationImagePreviewUrl ? (
-                      <img
-                        src={scheduleExplanationImagePreviewUrl}
-                        alt="Imagem explicativa de agendamento"
-                        className="max-h-64 w-auto rounded-lg object-contain"
-                      />
-                    ) : scheduleExplanationImageUrl ? (
-                      <Image
-                        src={`/api/image?url=${encodeURIComponent(scheduleExplanationImageUrl)}`}
-                        alt="Imagem explicativa de agendamento"
-                        width={600}
-                        height={300}
-                        className="max-h-64 w-auto rounded-lg object-contain"
-                      />
-                    ) : (
-                      <>
-                        <Upload className="mb-2 size-8 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Arraste uma imagem aqui ou</span>
-                        <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
-                          Selecionar Arquivo
-                        </span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="scheduleExplanationText">Descrição por escrito</Label>
-                  <Textarea
-                    id="scheduleExplanationText"
-                    value={scheduleExplanationText}
-                    onChange={(e) => {
-                      setScheduleExplanationText(e.target.value);
-                      setHasUnsavedChanges(true);
-                    }}
-                    placeholder="Explique como funciona o agendamento fixo e variável..."
-                    className="min-h-[160px]"
-                    disabled={!selectedUnitId || isPending}
-                  />
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* ── Tab: Horários ── */}
@@ -1245,6 +1169,83 @@ export function UnitsPage() {
                     scheduleSaveRef.current = saveFn;
                   }}
                 />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Agendamento Fixo e Variável</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Adicione uma imagem explicativa e uma descrição por escrito sobre o agendamento
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Imagem Explicativa</Label>
+                  <input
+                    ref={scheduleExplanationImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleSelectScheduleExplanationImage(e.target.files?.[0])}
+                    disabled={!selectedUnitId || isPending}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => scheduleExplanationImageInputRef.current?.click()}
+                    disabled={!selectedUnitId || isPending}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) handleSelectScheduleExplanationImage(file);
+                    }}
+                    className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {scheduleExplanationImagePreviewUrl ? (
+                      <img
+                        src={scheduleExplanationImagePreviewUrl}
+                        alt="Imagem explicativa de agendamento"
+                        className="max-h-64 w-auto rounded-lg object-contain"
+                      />
+                    ) : scheduleExplanationImageUrl ? (
+                      <Image
+                        src={`/api/image?url=${encodeURIComponent(scheduleExplanationImageUrl)}`}
+                        alt="Imagem explicativa de agendamento"
+                        width={600}
+                        height={300}
+                        className="max-h-64 w-auto rounded-lg object-contain"
+                      />
+                    ) : (
+                      <>
+                        <Upload className="mb-2 size-8 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Arraste uma imagem aqui ou</span>
+                        <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
+                          Selecionar Arquivo
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="scheduleExplanationText">Descrição por escrito</Label>
+                  <Textarea
+                    id="scheduleExplanationText"
+                    value={scheduleExplanationText}
+                    onChange={(e) => {
+                      setScheduleExplanationText(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="Explique como funciona o agendamento fixo e variável..."
+                    className="min-h-[160px]"
+                    disabled={!selectedUnitId || isPending}
+                  />
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
