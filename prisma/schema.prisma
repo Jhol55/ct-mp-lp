@@ -60,6 +60,9 @@ model Unit {
   scheduleExplanationImageUrl String?
   scheduleExplanationImageKey String?
   scheduleExplanationText String?
+  rulesImageUrl String?
+  rulesImageKey String?
+  rulesText String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

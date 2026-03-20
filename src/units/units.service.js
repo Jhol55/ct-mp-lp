@@ -103,6 +103,12 @@ export class UnitsService {
       data.scheduleExplanationImageKey = patch.scheduleExplanationImageKey ? String(patch.scheduleExplanationImageKey) : null;
     if (patch?.scheduleExplanationText !== undefined)
       data.scheduleExplanationText = patch.scheduleExplanationText ? String(patch.scheduleExplanationText).trim() : null;
+    if (patch?.rulesImageUrl !== undefined)
+      data.rulesImageUrl = patch.rulesImageUrl ? String(patch.rulesImageUrl) : null;
+    if (patch?.rulesImageKey !== undefined)
+      data.rulesImageKey = patch.rulesImageKey ? String(patch.rulesImageKey) : null;
+    if (patch?.rulesText !== undefined)
+      data.rulesText = patch.rulesText ? String(patch.rulesText).trim() : null;
 
     // Delete old schedule image from MinIO when a new one is being set
     if (patch?.scheduleImageKey) {
@@ -134,6 +140,17 @@ export class UnitsService {
       });
       if (existing?.scheduleExplanationImageKey && existing.scheduleExplanationImageKey !== patch.scheduleExplanationImageKey) {
         await this.uploads.deleteObject(existing.scheduleExplanationImageKey);
+      }
+    }
+
+    // Delete old rules image from MinIO when a new one is being set
+    if (patch?.rulesImageKey) {
+      const existing = await this.prisma.unit.findUnique({
+        where: { id },
+        select: { rulesImageKey: true },
+      });
+      if (existing?.rulesImageKey && existing.rulesImageKey !== patch.rulesImageKey) {
+        await this.uploads.deleteObject(existing.rulesImageKey);
       }
     }
 
@@ -302,6 +319,15 @@ export class UnitsService {
       } catch (e) {
         // Log error but don't fail deletion if image deletion fails
         console.error('Failed to delete schedule explanation image from MinIO:', e);
+      }
+    }
+
+    if (unit.rulesImageKey) {
+      try {
+        await this.uploads.deleteObject(unit.rulesImageKey);
+      } catch (e) {
+        // Log error but don't fail deletion if image deletion fails
+        console.error('Failed to delete rules image from MinIO:', e);
       }
     }
 
