@@ -58,6 +58,7 @@ export function UnitsPage() {
   const [isPending, startTransition] = useTransition();
   const scheduleFileInputRef = useRef(null);
   const scheduleSaveRef = useRef(null); // Ref para função de salvar do grid
+  const trialClassRulesImageInputRef = useRef(null);
   const modalityImageInputRefs = useRef({}); // Refs para upload de imagens das modalidades (objeto com chaves sendo modalityId)
 
   // Unsaved changes tracking
@@ -78,6 +79,14 @@ export function UnitsPage() {
   const [paymentMethods, setPaymentMethods] = useState("");
   const [cancellationRules, setCancellationRules] = useState("");
   const [generalNotes, setGeneralNotes] = useState("");
+
+  // Trial class (aula experimental) fields
+  const [trialClassRulesImageUrl, setTrialClassRulesImageUrl] = useState("");
+  const [trialClassRulesImageKey, setTrialClassRulesImageKey] = useState("");
+  const [trialClassRulesText, setTrialClassRulesText] = useState("");
+  const [trialClassNotes, setTrialClassNotes] = useState("");
+  const [trialClassRulesImageFile, setTrialClassRulesImageFile] = useState(null);
+  const [trialClassRulesImagePreviewUrl, setTrialClassRulesImagePreviewUrl] = useState(null);
 
   // Modal: new unit
   const [unitModalOpen, setUnitModalOpen] = useState(false);
@@ -217,9 +226,23 @@ export function UnitsPage() {
       setPaymentMethods(selectedUnit.paymentMethods || "");
       setCancellationRules(selectedUnit.cancellationRules || "");
       setGeneralNotes(selectedUnit.generalNotes || "");
+      setTrialClassRulesImageUrl(selectedUnit.trialClassRulesImageUrl || "");
+      setTrialClassRulesImageKey(selectedUnit.trialClassRulesImageKey || "");
+      setTrialClassRulesText(selectedUnit.trialClassRulesText || "");
+      setTrialClassNotes(selectedUnit.trialClassNotes || "");
+      setTrialClassRulesImageFile(null);
+      setTrialClassRulesImagePreviewUrl(null);
       setHasUnsavedChanges(false);
     }
   }, [selectedUnit]);
+
+  useEffect(() => {
+    return () => {
+      if (trialClassRulesImagePreviewUrl) {
+        URL.revokeObjectURL(trialClassRulesImagePreviewUrl);
+      }
+    };
+  }, [trialClassRulesImagePreviewUrl]);
 
   function addPriceRow() {
     setPriceRows((rows) => [...rows, { model: "SEMIANNUAL", price: "" }]);
@@ -343,6 +366,13 @@ export function UnitsPage() {
     });
   }
 
+  function handleSelectTrialClassRulesImage(file) {
+    if (!file) return;
+    setTrialClassRulesImageFile(file);
+    setTrialClassRulesImagePreviewUrl(URL.createObjectURL(file));
+    setHasUnsavedChanges(true);
+  }
+
   async function handleSaveAll() {
     if (!selectedUnitId) return;
     startTransition(async () => {
@@ -357,6 +387,27 @@ export function UnitsPage() {
         }
 
         // Salvar campos de endereço
+        let uploadedTrialRules = null;
+        if (trialClassRulesImageFile) {
+          const ext = (trialClassRulesImageFile.name.split(".").pop() || "jpg").toLowerCase();
+          const { uploadUrl, publicUrl, key } = await presignUpload({
+            contentType: trialClassRulesImageFile.type || "image/jpeg",
+            ext,
+            type: "schedule",
+          });
+
+          const put = await fetch(uploadUrl, {
+            method: "PUT",
+            headers: { "Content-Type": trialClassRulesImageFile.type || "image/jpeg" },
+            body: trialClassRulesImageFile,
+          });
+          if (!put.ok) {
+            throw new Error(`Upload falhou (${put.status})`);
+          }
+
+          uploadedTrialRules = { publicUrl, key };
+        }
+
         await updateUnit(selectedUnitId, {
           address,
           addressNumber,
@@ -367,6 +418,10 @@ export function UnitsPage() {
           paymentMethods,
           cancellationRules,
           generalNotes,
+          trialClassRulesImageUrl: uploadedTrialRules ? uploadedTrialRules.publicUrl : trialClassRulesImageUrl,
+          trialClassRulesImageKey: uploadedTrialRules ? uploadedTrialRules.key : trialClassRulesImageKey,
+          trialClassRulesText,
+          trialClassNotes,
         });
 
         // Salvar mudanças do grid de horários
@@ -720,6 +775,7 @@ export function UnitsPage() {
             <TabsTrigger value="endereco">Endereço</TabsTrigger>
             <TabsTrigger value="horarios">Horários</TabsTrigger>
             <TabsTrigger value="parceiros">Parceiros</TabsTrigger>
+            <TabsTrigger value="aula-experimental">Aula Experimental</TabsTrigger>
             <TabsTrigger value="observacoes">Observações Gerais</TabsTrigger>
           </TabsList>
 
@@ -1127,6 +1183,102 @@ export function UnitsPage() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* ── Tab: Aula Experimental ── */}
+          <TabsContent value="aula-experimental" className="space-y-6 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Aula Experimental</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Adicione as regras da aula (imagem) e preencha as regras por escrito e observações
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Imagem das Regras</Label>
+                  <input
+                    ref={trialClassRulesImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleSelectTrialClassRulesImage(e.target.files?.[0])}
+                    disabled={!selectedUnitId || isPending}
+                    className="hidden"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => trialClassRulesImageInputRef.current?.click()}
+                    disabled={!selectedUnitId || isPending}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) handleSelectTrialClassRulesImage(file);
+                    }}
+                    className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {trialClassRulesImagePreviewUrl ? (
+                      <img
+                        src={trialClassRulesImagePreviewUrl}
+                        alt="Imagem das regras da aula experimental"
+                        className="max-h-64 w-auto rounded-lg object-contain"
+                      />
+                    ) : trialClassRulesImageUrl ? (
+                      <Image
+                        src={`/api/image?url=${encodeURIComponent(trialClassRulesImageUrl)}`}
+                        alt="Imagem das regras da aula experimental"
+                        width={600}
+                        height={300}
+                        className="max-h-64 w-auto rounded-lg object-contain"
+                      />
+                    ) : (
+                      <>
+                        <Upload className="mb-2 size-8 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Arraste uma imagem aqui ou</span>
+                        <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
+                          Selecionar Arquivo
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="trialClassRulesText">Regras por escrito</Label>
+                  <Textarea
+                    id="trialClassRulesText"
+                    value={trialClassRulesText}
+                    onChange={(e) => {
+                      setTrialClassRulesText(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="Escreva as regras da aula experimental..."
+                    className="min-h-[160px]"
+                    disabled={!selectedUnitId || isPending}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="trialClassNotes">Observações</Label>
+                  <Textarea
+                    id="trialClassNotes"
+                    value={trialClassNotes}
+                    onChange={(e) => {
+                      setTrialClassNotes(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="Observações sobre a aula experimental..."
+                    className="min-h-[160px]"
+                    disabled={!selectedUnitId || isPending}
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* ── Tab: Observações Gerais ── */}
