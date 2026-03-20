@@ -58,6 +58,7 @@ export function UnitsPage() {
   const [isPending, startTransition] = useTransition();
   const scheduleFileInputRef = useRef(null);
   const scheduleExplanationImageInputRef = useRef(null);
+  const rulesImageInputRef = useRef(null);
   const scheduleSaveRef = useRef(null); // Ref para função de salvar do grid
   const trialClassRulesImageInputRef = useRef(null);
   const modalityImageInputRefs = useRef({}); // Refs para upload de imagens das modalidades (objeto com chaves sendo modalityId)
@@ -95,6 +96,13 @@ export function UnitsPage() {
   const [scheduleExplanationText, setScheduleExplanationText] = useState("");
   const [scheduleExplanationImageFile, setScheduleExplanationImageFile] = useState(null);
   const [scheduleExplanationImagePreviewUrl, setScheduleExplanationImagePreviewUrl] = useState(null);
+
+  // Rules fields
+  const [rulesImageUrl, setRulesImageUrl] = useState("");
+  const [rulesImageKey, setRulesImageKey] = useState("");
+  const [rulesText, setRulesText] = useState("");
+  const [rulesImageFile, setRulesImageFile] = useState(null);
+  const [rulesImagePreviewUrl, setRulesImagePreviewUrl] = useState(null);
 
   // Modal: new unit
   const [unitModalOpen, setUnitModalOpen] = useState(false);
@@ -245,6 +253,11 @@ export function UnitsPage() {
       setScheduleExplanationText(selectedUnit.scheduleExplanationText || "");
       setScheduleExplanationImageFile(null);
       setScheduleExplanationImagePreviewUrl(null);
+      setRulesImageUrl(selectedUnit.rulesImageUrl || "");
+      setRulesImageKey(selectedUnit.rulesImageKey || "");
+      setRulesText(selectedUnit.rulesText || "");
+      setRulesImageFile(null);
+      setRulesImagePreviewUrl(null);
       setHasUnsavedChanges(false);
     }
   }, [selectedUnit]);
@@ -264,6 +277,14 @@ export function UnitsPage() {
       }
     };
   }, [scheduleExplanationImagePreviewUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (rulesImagePreviewUrl) {
+        URL.revokeObjectURL(rulesImagePreviewUrl);
+      }
+    };
+  }, [rulesImagePreviewUrl]);
 
   function addPriceRow() {
     setPriceRows((rows) => [...rows, { model: "SEMIANNUAL", price: "" }]);
@@ -401,6 +422,13 @@ export function UnitsPage() {
     setHasUnsavedChanges(true);
   }
 
+  function handleSelectRulesImage(file) {
+    if (!file) return;
+    setRulesImageFile(file);
+    setRulesImagePreviewUrl(URL.createObjectURL(file));
+    setHasUnsavedChanges(true);
+  }
+
   async function handleSaveAll() {
     if (!selectedUnitId) return;
     startTransition(async () => {
@@ -457,6 +485,27 @@ export function UnitsPage() {
           uploadedScheduleExplanation = { publicUrl, key };
         }
 
+        let uploadedRules = null;
+        if (rulesImageFile) {
+          const ext = (rulesImageFile.name.split(".").pop() || "jpg").toLowerCase();
+          const { uploadUrl, publicUrl, key } = await presignUpload({
+            contentType: rulesImageFile.type || "image/jpeg",
+            ext,
+            type: "schedule",
+          });
+
+          const put = await fetch(uploadUrl, {
+            method: "PUT",
+            headers: { "Content-Type": rulesImageFile.type || "image/jpeg" },
+            body: rulesImageFile,
+          });
+          if (!put.ok) {
+            throw new Error(`Upload falhou (${put.status})`);
+          }
+
+          uploadedRules = { publicUrl, key };
+        }
+
         await updateUnit(selectedUnitId, {
           address,
           addressNumber,
@@ -478,6 +527,9 @@ export function UnitsPage() {
             ? uploadedScheduleExplanation.key
             : scheduleExplanationImageKey,
           scheduleExplanationText,
+          rulesImageUrl: uploadedRules ? uploadedRules.publicUrl : rulesImageUrl,
+          rulesImageKey: uploadedRules ? uploadedRules.key : rulesImageKey,
+          rulesText,
         });
 
         // Salvar mudanças do grid de horários
@@ -832,6 +884,7 @@ export function UnitsPage() {
             <TabsTrigger value="horarios">Horários</TabsTrigger>
             <TabsTrigger value="parceiros">Parceiros</TabsTrigger>
             <TabsTrigger value="aula-experimental">Aula Experimental</TabsTrigger>
+            <TabsTrigger value="regras">Regras</TabsTrigger>
             <TabsTrigger value="observacoes">Observações Gerais</TabsTrigger>
           </TabsList>
 
@@ -1407,6 +1460,86 @@ export function UnitsPage() {
                       setHasUnsavedChanges(true);
                     }}
                     placeholder="Observações sobre a aula experimental..."
+                    className="min-h-[160px]"
+                    disabled={!selectedUnitId || isPending}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ── Tab: Regras ── */}
+          <TabsContent value="regras" className="space-y-6 mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Regras</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Adicione a imagem das regras e a descrição por escrito
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Imagem das Regras</Label>
+                  <input
+                    ref={rulesImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleSelectRulesImage(e.target.files?.[0])}
+                    disabled={!selectedUnitId || isPending}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => rulesImageInputRef.current?.click()}
+                    disabled={!selectedUnitId || isPending}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) handleSelectRulesImage(file);
+                    }}
+                    className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {rulesImagePreviewUrl ? (
+                      <img
+                        src={rulesImagePreviewUrl}
+                        alt="Imagem das regras"
+                        className="max-h-64 w-auto rounded-lg object-contain"
+                      />
+                    ) : rulesImageUrl ? (
+                      <Image
+                        src={`/api/image?url=${encodeURIComponent(rulesImageUrl)}`}
+                        alt="Imagem das regras"
+                        width={600}
+                        height={300}
+                        className="max-h-64 w-auto rounded-lg object-contain"
+                      />
+                    ) : (
+                      <>
+                        <Upload className="mb-2 size-8 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Arraste uma imagem aqui ou</span>
+                        <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
+                          Selecionar Arquivo
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="rulesText">Descrição da imagem</Label>
+                  <Textarea
+                    id="rulesText"
+                    value={rulesText}
+                    onChange={(e) => {
+                      setRulesText(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="Descreva as regras da unidade..."
                     className="min-h-[160px]"
                     disabled={!selectedUnitId || isPending}
                   />
