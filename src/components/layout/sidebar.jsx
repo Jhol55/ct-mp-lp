@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -26,6 +27,7 @@ function isAdminHost() {
 
 export function AppSidebar() {
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
   const adminHost = isAdminHost();
 
   // On admin subdomain, middleware rewrites /home -> /admin/home, /unidades -> /admin/unidades.
@@ -50,6 +52,8 @@ export function AppSidebar() {
   const handleLogout = () => {
     startTransition(async () => {
       await logout();
+      router.push("/login");
+      router.refresh();
     });
   };
 
