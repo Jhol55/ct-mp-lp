@@ -15,6 +15,8 @@ SELECT
       'trialClassRulesImageUrl', u."trialClassRulesImageUrl",
       'trialClassRulesText', u."trialClassRulesText",
       'trialClassNotes', u."trialClassNotes",
+      'scheduleExplanationImageUrl', u."scheduleExplanationImageUrl",
+      'scheduleExplanationText', u."scheduleExplanationText",
       'modalities', COALESCE(
         (
           SELECT json_agg(
@@ -118,6 +120,8 @@ SELECT
       'trialClassRulesImageUrl', u."trialClassRulesImageUrl",
       'trialClassRulesText', u."trialClassRulesText",
       'trialClassNotes', u."trialClassNotes",
+      'scheduleExplanationImageUrl', u."scheduleExplanationImageUrl",
+      'scheduleExplanationText', u."scheduleExplanationText",
       'modalities', COALESCE(
         (
           SELECT json_agg(

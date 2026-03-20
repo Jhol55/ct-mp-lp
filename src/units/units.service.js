@@ -97,6 +97,12 @@ export class UnitsService {
       data.trialClassRulesText = patch.trialClassRulesText ? String(patch.trialClassRulesText).trim() : null;
     if (patch?.trialClassNotes !== undefined)
       data.trialClassNotes = patch.trialClassNotes ? String(patch.trialClassNotes).trim() : null;
+    if (patch?.scheduleExplanationImageUrl !== undefined)
+      data.scheduleExplanationImageUrl = patch.scheduleExplanationImageUrl ? String(patch.scheduleExplanationImageUrl) : null;
+    if (patch?.scheduleExplanationImageKey !== undefined)
+      data.scheduleExplanationImageKey = patch.scheduleExplanationImageKey ? String(patch.scheduleExplanationImageKey) : null;
+    if (patch?.scheduleExplanationText !== undefined)
+      data.scheduleExplanationText = patch.scheduleExplanationText ? String(patch.scheduleExplanationText).trim() : null;
 
     // Delete old schedule image from MinIO when a new one is being set
     if (patch?.scheduleImageKey) {
@@ -117,6 +123,17 @@ export class UnitsService {
       });
       if (existing?.trialClassRulesImageKey && existing.trialClassRulesImageKey !== patch.trialClassRulesImageKey) {
         await this.uploads.deleteObject(existing.trialClassRulesImageKey);
+      }
+    }
+
+    // Delete old schedule-explanation image from MinIO when a new one is being set
+    if (patch?.scheduleExplanationImageKey) {
+      const existing = await this.prisma.unit.findUnique({
+        where: { id },
+        select: { scheduleExplanationImageKey: true },
+      });
+      if (existing?.scheduleExplanationImageKey && existing.scheduleExplanationImageKey !== patch.scheduleExplanationImageKey) {
+        await this.uploads.deleteObject(existing.scheduleExplanationImageKey);
       }
     }
 
@@ -276,6 +293,15 @@ export class UnitsService {
       } catch (e) {
         // Log error but don't fail deletion if image deletion fails
         console.error('Failed to delete trial class rules image from MinIO:', e);
+      }
+    }
+
+    if (unit.scheduleExplanationImageKey) {
+      try {
+        await this.uploads.deleteObject(unit.scheduleExplanationImageKey);
+      } catch (e) {
+        // Log error but don't fail deletion if image deletion fails
+        console.error('Failed to delete schedule explanation image from MinIO:', e);
       }
     }
 
