@@ -57,6 +57,7 @@ export function UnitsPage() {
 
   const [isPending, startTransition] = useTransition();
   const scheduleFileInputRef = useRef(null);
+  const scheduleExplanationImageInputRef = useRef(null);
   const scheduleSaveRef = useRef(null); // Ref para função de salvar do grid
   const trialClassRulesImageInputRef = useRef(null);
   const modalityImageInputRefs = useRef({}); // Refs para upload de imagens das modalidades (objeto com chaves sendo modalityId)
@@ -87,6 +88,13 @@ export function UnitsPage() {
   const [trialClassNotes, setTrialClassNotes] = useState("");
   const [trialClassRulesImageFile, setTrialClassRulesImageFile] = useState(null);
   const [trialClassRulesImagePreviewUrl, setTrialClassRulesImagePreviewUrl] = useState(null);
+
+  // Schedule explanation fields
+  const [scheduleExplanationImageUrl, setScheduleExplanationImageUrl] = useState("");
+  const [scheduleExplanationImageKey, setScheduleExplanationImageKey] = useState("");
+  const [scheduleExplanationText, setScheduleExplanationText] = useState("");
+  const [scheduleExplanationImageFile, setScheduleExplanationImageFile] = useState(null);
+  const [scheduleExplanationImagePreviewUrl, setScheduleExplanationImagePreviewUrl] = useState(null);
 
   // Modal: new unit
   const [unitModalOpen, setUnitModalOpen] = useState(false);
@@ -232,6 +240,11 @@ export function UnitsPage() {
       setTrialClassNotes(selectedUnit.trialClassNotes || "");
       setTrialClassRulesImageFile(null);
       setTrialClassRulesImagePreviewUrl(null);
+      setScheduleExplanationImageUrl(selectedUnit.scheduleExplanationImageUrl || "");
+      setScheduleExplanationImageKey(selectedUnit.scheduleExplanationImageKey || "");
+      setScheduleExplanationText(selectedUnit.scheduleExplanationText || "");
+      setScheduleExplanationImageFile(null);
+      setScheduleExplanationImagePreviewUrl(null);
       setHasUnsavedChanges(false);
     }
   }, [selectedUnit]);
@@ -243,6 +256,14 @@ export function UnitsPage() {
       }
     };
   }, [trialClassRulesImagePreviewUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (scheduleExplanationImagePreviewUrl) {
+        URL.revokeObjectURL(scheduleExplanationImagePreviewUrl);
+      }
+    };
+  }, [scheduleExplanationImagePreviewUrl]);
 
   function addPriceRow() {
     setPriceRows((rows) => [...rows, { model: "SEMIANNUAL", price: "" }]);
@@ -373,6 +394,13 @@ export function UnitsPage() {
     setHasUnsavedChanges(true);
   }
 
+  function handleSelectScheduleExplanationImage(file) {
+    if (!file) return;
+    setScheduleExplanationImageFile(file);
+    setScheduleExplanationImagePreviewUrl(URL.createObjectURL(file));
+    setHasUnsavedChanges(true);
+  }
+
   async function handleSaveAll() {
     if (!selectedUnitId) return;
     startTransition(async () => {
@@ -408,6 +436,27 @@ export function UnitsPage() {
           uploadedTrialRules = { publicUrl, key };
         }
 
+        let uploadedScheduleExplanation = null;
+        if (scheduleExplanationImageFile) {
+          const ext = (scheduleExplanationImageFile.name.split(".").pop() || "jpg").toLowerCase();
+          const { uploadUrl, publicUrl, key } = await presignUpload({
+            contentType: scheduleExplanationImageFile.type || "image/jpeg",
+            ext,
+            type: "schedule",
+          });
+
+          const put = await fetch(uploadUrl, {
+            method: "PUT",
+            headers: { "Content-Type": scheduleExplanationImageFile.type || "image/jpeg" },
+            body: scheduleExplanationImageFile,
+          });
+          if (!put.ok) {
+            throw new Error(`Upload falhou (${put.status})`);
+          }
+
+          uploadedScheduleExplanation = { publicUrl, key };
+        }
+
         await updateUnit(selectedUnitId, {
           address,
           addressNumber,
@@ -422,6 +471,13 @@ export function UnitsPage() {
           trialClassRulesImageKey: uploadedTrialRules ? uploadedTrialRules.key : trialClassRulesImageKey,
           trialClassRulesText,
           trialClassNotes,
+          scheduleExplanationImageUrl: uploadedScheduleExplanation
+            ? uploadedScheduleExplanation.publicUrl
+            : scheduleExplanationImageUrl,
+          scheduleExplanationImageKey: uploadedScheduleExplanation
+            ? uploadedScheduleExplanation.key
+            : scheduleExplanationImageKey,
+          scheduleExplanationText,
         });
 
         // Salvar mudanças do grid de horários
@@ -1034,6 +1090,83 @@ export function UnitsPage() {
                       disabled={!selectedUnitId || isPending}
                     />
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Agendamento Fixo e Variável</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Adicione uma imagem explicativa e uma descrição por escrito sobre o agendamento
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Imagem Explicativa</Label>
+                  <input
+                    ref={scheduleExplanationImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleSelectScheduleExplanationImage(e.target.files?.[0])}
+                    disabled={!selectedUnitId || isPending}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => scheduleExplanationImageInputRef.current?.click()}
+                    disabled={!selectedUnitId || isPending}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) handleSelectScheduleExplanationImage(file);
+                    }}
+                    className="flex w-full h-full min-h-[200px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-muted-foreground/30 p-6 transition hover:border-muted-foreground/50 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {scheduleExplanationImagePreviewUrl ? (
+                      <img
+                        src={scheduleExplanationImagePreviewUrl}
+                        alt="Imagem explicativa de agendamento"
+                        className="max-h-64 w-auto rounded-lg object-contain"
+                      />
+                    ) : scheduleExplanationImageUrl ? (
+                      <Image
+                        src={`/api/image?url=${encodeURIComponent(scheduleExplanationImageUrl)}`}
+                        alt="Imagem explicativa de agendamento"
+                        width={600}
+                        height={300}
+                        className="max-h-64 w-auto rounded-lg object-contain"
+                      />
+                    ) : (
+                      <>
+                        <Upload className="mb-2 size-8 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">Arraste uma imagem aqui ou</span>
+                        <span className="mt-2 inline-flex items-center rounded-lg border bg-background px-4 py-2 text-sm font-medium shadow-sm">
+                          Selecionar Arquivo
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="scheduleExplanationText">Descrição por escrito</Label>
+                  <Textarea
+                    id="scheduleExplanationText"
+                    value={scheduleExplanationText}
+                    onChange={(e) => {
+                      setScheduleExplanationText(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="Explique como funciona o agendamento fixo e variável..."
+                    className="min-h-[160px]"
+                    disabled={!selectedUnitId || isPending}
+                  />
                 </div>
               </CardContent>
             </Card>
