@@ -89,6 +89,14 @@ export class UnitsService {
       data.cancellationRules = patch.cancellationRules ? String(patch.cancellationRules).trim() : null;
     if (patch?.generalNotes !== undefined)
       data.generalNotes = patch.generalNotes ? String(patch.generalNotes).trim() : null;
+    if (patch?.trialClassRulesImageUrl !== undefined)
+      data.trialClassRulesImageUrl = patch.trialClassRulesImageUrl ? String(patch.trialClassRulesImageUrl) : null;
+    if (patch?.trialClassRulesImageKey !== undefined)
+      data.trialClassRulesImageKey = patch.trialClassRulesImageKey ? String(patch.trialClassRulesImageKey) : null;
+    if (patch?.trialClassRulesText !== undefined)
+      data.trialClassRulesText = patch.trialClassRulesText ? String(patch.trialClassRulesText).trim() : null;
+    if (patch?.trialClassNotes !== undefined)
+      data.trialClassNotes = patch.trialClassNotes ? String(patch.trialClassNotes).trim() : null;
 
     // Delete old schedule image from MinIO when a new one is being set
     if (patch?.scheduleImageKey) {
@@ -98,6 +106,17 @@ export class UnitsService {
       });
       if (existing?.scheduleImageKey && existing.scheduleImageKey !== patch.scheduleImageKey) {
         await this.uploads.deleteObject(existing.scheduleImageKey);
+      }
+    }
+
+    // Delete old trial-class rules image from MinIO when a new one is being set
+    if (patch?.trialClassRulesImageKey) {
+      const existing = await this.prisma.unit.findUnique({
+        where: { id },
+        select: { trialClassRulesImageKey: true },
+      });
+      if (existing?.trialClassRulesImageKey && existing.trialClassRulesImageKey !== patch.trialClassRulesImageKey) {
+        await this.uploads.deleteObject(existing.trialClassRulesImageKey);
       }
     }
 
@@ -247,6 +266,16 @@ export class UnitsService {
       } catch (e) {
         // Log error but don't fail deletion if image deletion fails
         console.error('Failed to delete schedule image from MinIO:', e);
+      }
+    }
+
+    // Deletar imagem de regras da aula experimental do MinIO se existir
+    if (unit.trialClassRulesImageKey) {
+      try {
+        await this.uploads.deleteObject(unit.trialClassRulesImageKey);
+      } catch (e) {
+        // Log error but don't fail deletion if image deletion fails
+        console.error('Failed to delete trial class rules image from MinIO:', e);
       }
     }
 
