@@ -47,7 +47,7 @@ export async function login(credentials) {
 }
 
 export async function logout() {
-  await signOut({ redirect: false });
+  await signOut({ redirectTo: "/login" });
 }
 
 

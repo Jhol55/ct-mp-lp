@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { logout } from "@/actions/auth";
 
 export default async function AdminHomePage() {
   const session = await auth();
@@ -15,6 +16,14 @@ export default async function AdminHomePage() {
             </p>
           </div>
 
+          <form action={logout}>
+            <button
+              type="submit"
+              className="h-10 rounded-xl border bg-background px-4 text-sm font-medium hover:bg-muted"
+            >
+              Sair
+            </button>
+          </form>
         </div>
       </div>
     </main>
