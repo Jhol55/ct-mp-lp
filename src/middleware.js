@@ -64,8 +64,16 @@ export default auth((request) => {
     return NextResponse.next();
   }
 
+  if (!isAdminPath && isLoginPath) {
+    const redirectUrl = url.clone();
+    redirectUrl.pathname = "/";
+    return NextResponse.redirect(redirectUrl);
+  }
+
   return NextResponse.next();
 });
+
+
 
 export const config = {
   matcher: [
