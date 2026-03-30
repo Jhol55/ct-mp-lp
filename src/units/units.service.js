@@ -97,6 +97,8 @@ export class UnitsService {
       data.trialClassRulesText = patch.trialClassRulesText ? String(patch.trialClassRulesText).trim() : null;
     if (patch?.trialClassNotes !== undefined)
       data.trialClassNotes = patch.trialClassNotes ? String(patch.trialClassNotes).trim() : null;
+    if (patch?.trialClassSchedulingUrl !== undefined)
+      data.trialClassSchedulingUrl = patch.trialClassSchedulingUrl ? String(patch.trialClassSchedulingUrl).trim() : null;
     if (patch?.scheduleExplanationImageUrl !== undefined)
       data.scheduleExplanationImageUrl = patch.scheduleExplanationImageUrl ? String(patch.scheduleExplanationImageUrl) : null;
     if (patch?.scheduleExplanationImageKey !== undefined)

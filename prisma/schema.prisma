@@ -57,6 +57,7 @@ model Unit {
   trialClassRulesImageKey String?
   trialClassRulesText String?
   trialClassNotes String?
+  trialClassSchedulingUrl String?
   scheduleExplanationImageUrl String?
   scheduleExplanationImageKey String?
   scheduleExplanationText String?
