@@ -1386,6 +1386,21 @@ export function UnitsPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
+                  <Label htmlFor="trialClassSchedulingUrl">URL de Agendamento</Label>
+                  <Input
+                    id="trialClassSchedulingUrl"
+                    type="url"
+                    value={trialClassSchedulingUrl}
+                    onChange={(e) => {
+                      setTrialClassSchedulingUrl(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="https://..."
+                    disabled={!selectedUnitId || isPending}
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label>Imagem das Regras</Label>
                   <input
                     ref={trialClassRulesImageInputRef}
@@ -1468,20 +1483,6 @@ export function UnitsPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="trialClassSchedulingUrl">URL de Agendamento</Label>
-                  <Input
-                    id="trialClassSchedulingUrl"
-                    type="url"
-                    value={trialClassSchedulingUrl}
-                    onChange={(e) => {
-                      setTrialClassSchedulingUrl(e.target.value);
-                      setHasUnsavedChanges(true);
-                    }}
-                    placeholder="https://..."
-                    disabled={!selectedUnitId || isPending}
-                  />
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
