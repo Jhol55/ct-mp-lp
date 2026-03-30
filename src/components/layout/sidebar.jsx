@@ -50,6 +50,7 @@ export function AppSidebar() {
   const handleLogout = () => {
     startTransition(async () => {
       await logout();
+      window.location.href = "/login";
     });
   };
 
