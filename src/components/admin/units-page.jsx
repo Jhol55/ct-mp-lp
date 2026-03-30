@@ -87,6 +87,7 @@ export function UnitsPage() {
   const [trialClassRulesImageKey, setTrialClassRulesImageKey] = useState("");
   const [trialClassRulesText, setTrialClassRulesText] = useState("");
   const [trialClassNotes, setTrialClassNotes] = useState("");
+  const [trialClassSchedulingUrl, setTrialClassSchedulingUrl] = useState("");
   const [trialClassRulesImageFile, setTrialClassRulesImageFile] = useState(null);
   const [trialClassRulesImagePreviewUrl, setTrialClassRulesImagePreviewUrl] = useState(null);
 
@@ -246,6 +247,7 @@ export function UnitsPage() {
       setTrialClassRulesImageKey(selectedUnit.trialClassRulesImageKey || "");
       setTrialClassRulesText(selectedUnit.trialClassRulesText || "");
       setTrialClassNotes(selectedUnit.trialClassNotes || "");
+      setTrialClassSchedulingUrl(selectedUnit.trialClassSchedulingUrl || "");
       setTrialClassRulesImageFile(null);
       setTrialClassRulesImagePreviewUrl(null);
       setScheduleExplanationImageUrl(selectedUnit.scheduleExplanationImageUrl || "");
@@ -520,6 +522,7 @@ export function UnitsPage() {
           trialClassRulesImageKey: uploadedTrialRules ? uploadedTrialRules.key : trialClassRulesImageKey,
           trialClassRulesText,
           trialClassNotes,
+          trialClassSchedulingUrl,
           scheduleExplanationImageUrl: uploadedScheduleExplanation
             ? uploadedScheduleExplanation.publicUrl
             : scheduleExplanationImageUrl,
@@ -1461,6 +1464,21 @@ export function UnitsPage() {
                     }}
                     placeholder="Observações sobre a aula experimental..."
                     className="min-h-[160px]"
+                    disabled={!selectedUnitId || isPending}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="trialClassSchedulingUrl">URL de Agendamento</Label>
+                  <Input
+                    id="trialClassSchedulingUrl"
+                    type="url"
+                    value={trialClassSchedulingUrl}
+                    onChange={(e) => {
+                      setTrialClassSchedulingUrl(e.target.value);
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="https://..."
                     disabled={!selectedUnitId || isPending}
                   />
                 </div>
